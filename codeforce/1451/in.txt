@@ -1,0 +1,16 @@
+
+11 4
+aaaabbbbbcccc
+rrrrbeeeekkkk
+10 3
+aaaabbbcccc
+bbbcccckkkk
+10 3
+aazzzzbced
+aazzzzcdef
+14 2
+aazzzzbbcceedd
+aazzzzccddeeff
+10 5
+sbdfefsef
+sdsdddkki

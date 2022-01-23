@@ -1,0 +1,2 @@
+t << lcslen << endl;
+    cou

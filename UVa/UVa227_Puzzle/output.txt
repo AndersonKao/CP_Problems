@@ -1,0 +1,9 @@
+Puzzle #1:
+T R G S J 
+X O K L I 
+M D V B N 
+W P   A E 
+U Q H C F 
+
+This puzzle has no final configuration.
+This puzzle has no final configuration.

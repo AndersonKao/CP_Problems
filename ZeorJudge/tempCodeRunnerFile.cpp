@@ -1,0 +1,2 @@
+ter text:";
+    cin >> text
