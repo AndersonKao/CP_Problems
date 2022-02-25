@@ -15,7 +15,6 @@ string reverse_String(string &str){
     for (int i = 0; i < len; i++){
         tore += str[len-i-1];
     }
-
     return tore;
 }
 int main(){

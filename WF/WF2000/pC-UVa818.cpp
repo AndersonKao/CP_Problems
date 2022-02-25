@@ -1,7 +1,5 @@
 #include <bits/stdc++.h>
 using namespace std;
-//#define DEBUGK
-//#define DEBUG2
 
 int T;
 int ans;
@@ -18,9 +16,6 @@ void reset(){
 
 // false if no cycle, true if contains cycle;
 bool DFS(int i, int par, bool* visited, bitset<15> &Bs,  int N){
-#ifdef DEBUGK
-    cout << "DFSing " << i << endl;
-#endif
     for (int p = 0; p < N; p++)
     {
         if(!G[i][p] || p == par)
@@ -31,9 +26,6 @@ bool DFS(int i, int par, bool* visited, bitset<15> &Bs,  int N){
                 if(DFS(p,i, visited, Bs, N))
                     return true;
             }else{
-#ifdef DEBUGK
-                cout << "(i, p) =" << i << ", " << p << " detect cycle\n";
-#endif
                 return true;
             }
         }
@@ -43,10 +35,7 @@ bool DFS(int i, int par, bool* visited, bitset<15> &Bs,  int N){
 
 bool test(unsigned long bits, int N){
     bitset<15> Bs(bits);
-#ifdef DEBUGK
-    cout << "using set " << Bs << endl;
-#endif
-    // deg check <= 2
+    // deg check <= 2 for chain
     for (int i = 0; i < N; i++){
         int dismiss = 0;
         if(Bs[i])
@@ -57,9 +46,6 @@ bool test(unsigned long bits, int N){
                 dismiss++;
         }
         if(deg[i] - dismiss > 2){
-            #ifdef DEBUGK
-            cout << "deg error on index: " << i << endl;
-            #endif
             return false;
         }
     }
@@ -73,43 +59,15 @@ bool test(unsigned long bits, int N){
     {
         if(!visited[i] && !Bs[i]){ // not visited and not eliminated
             visited[i] = true;
-
-            #ifdef DEBUGK
-            cout << "Try DFS\n";
-            #endif
             if(DFS(i, -1, visited, Bs, N)){
-            #ifdef DEBUGK
-                cout << "u got cycles\n";
-            #endif
                 return false;
             }
-#ifdef DEBUGK
-            cout << "NCC increased\n";
-#endif
                 Ncc++;
         }
     }
-#ifdef DEBUGK
-    if(Ncc > Bs.count() + 1)
-        cout << "Too much component() = " << Ncc << endl;
-#endif
-
     if(Ncc <= Bs.count() + 1){
-#ifdef DEBUG2
-        if(ans >= Bs.count()){
-            cout << "We should open: ";
-            for (int i = 0; i < N; i++)
-                if(Bs[i])
-                    cout << i + 1 << " ";
-            cout << endl;
-        }
-#endif
         // becare of no open ans;
         ans = min(ans, (int)Bs.count());
-
-#ifdef DEBUGK
-        cout << "set ans = " << ans << endl;
-#endif
         return true;
     }
     return false;
@@ -133,12 +91,6 @@ bool solve(){
         }
     }
 
-#ifdef DEBUGK
-    cout << "origin deg\n";
-    for (int i = 0; i < N; i++){
-        cout << "deg " << i << " = " << deg[i] << endl;
-    }
-#endif
     bool solve = false;
     for (unsigned long bits = 0; bits < (1 << N); bits++){
         if(test(bits, N)){
@@ -151,11 +103,9 @@ bool solve(){
 int main(){
     cin.tie(0);
     ios_base::sync_with_stdio(false);
-
     int cnt = 1;
     while(solve()){
         cout << "Set " << cnt++ << ": Minimum links to open is " << ans << endl;
     }
-
     return 0;
 }

@@ -43,62 +43,34 @@ cardinal ch2car(char ch);
 direction ch2dir(char ch);
 cardinal car_dir(cardinal c, direction d);
 void routine(stack<P3i> &mypath, int r, int c, cardinal car){
-
-#ifdef DEBUG
-    cout << "came to " << r << ", " << c << " with cardinal ";
-    p_cardinal(car);
-#endif
     if(r < 0 || r > 9 || c < 0 || c > 9 || !maze[r][c].exist || maze[r][c].visitedfrom[car] || mypath.size() >= anslen){
-#ifdef DEBUG
-        if(!maze[r][c].exist)
-            cout << "not exist\n";
-        else
-            cout << "visited\n";
-#endif
         return;
     }
     maze[r][c].visitedfrom[car] = true;
     mypath.emplace(r, c, (int)car);
     if(r == end_r && c == end_c){
         solved = true;
-#ifdef DEBUGANS
-            cout << "shorter Ans: \n";
-#endif
-            ANS.clear();
-            stack<P3i> copied(mypath);// 倒出來
-            stack<P3i> revC;
-            while(copied.size()){
-                revC.emplace(copied.top());
-                copied.pop();
-            }
-            int u, v, un;
-            while(revC.size()){
-                tie(u, v, un) = revC.top();
-#ifdef DEBUGANS
-                cout << "(" << u << ", " << v << ") ";
-#endif
-                revC.pop();
-                ANS.emplace_back(u, v);
-            }
-#ifdef DEBUGANS
-            cout << endl;
-#endif
-            anslen = ANS.size();
+        ANS.clear();
+        stack<P3i> copied(mypath);// 倒出來
+        stack<P3i> revC;
+        while(copied.size()){
+            revC.emplace(copied.top());
+            copied.pop();
+        }
+        int u, v, un;
+        while(revC.size()){
+            tie(u, v, un) = revC.top();
+            revC.pop();
+            ANS.emplace_back(u, v);
+        }
+        anslen = ANS.size();
         maze[r][c].visitedfrom[car] = false;
         mypath.pop();
         return; 
     }
 
     for(direction p: maze[r][c].directs[car]){
-
         cardinal newcar = (car_dir(car, p));
-#ifdef DEBUG
-        cout << "at " << r << ", " << c << "  ";
-        cout << "turn ";
-        p_direction(p);
-        cout << "trans: ";
-        p_cardinal(newcar);
-#endif
         routine(mypath, r + coord[newcar].first, c + coord[newcar].second, newcar);
     }
     mypath.pop();
@@ -112,9 +84,6 @@ void solve(){
     maze[end_r][end_c].exist = true;
     maze[start_r][start_c].exist = true;
     start_cardinal = ch2car(ch);
-#ifdef DEBUG
-    p_cardinal(start_cardinal);
-#endif
     int r, c;
     while(true){
         cin >> r;
@@ -136,31 +105,8 @@ void solve(){
             }
         }
     }
-#ifdef DEBUG
-    for (int i = 0; i < 10; i++){
-        for (int j = 0; j < 10; j++){
-            if(!maze[i][j].exist)
-                continue;
-            cout << "r, c = " << i << ", " << j << endl;
-            for (int k = 0; k < 4; k++){
-                cout << "  ";
-                p_cardinal((cardinal)k);
-                for(auto p: maze[i][j].directs[k]){
-                    cout << "    ";
-                    p_direction((direction)p);
-                }
-            }
-        }
-    }
-#endif
     stack<P3i> mypath;
     mypath.emplace(start_r, start_c, start_cardinal);
-#ifdef DEBUG
-    for (cardinal s = cardinal::W; s < 4; s = (cardinal)(s + 1)){
-        cout << coord[s].first << ", " << coord[s].second << endl;
-    }
-        cout << "going to " << start_r + coord[start_cardinal].first << ", " << start_c + coord[start_cardinal].second << endl;
-#endif
     routine(mypath, start_r + coord[start_cardinal].first, start_c + coord[start_cardinal].second, start_cardinal);
    // routine(mypath, start_r + coord[start_cardinal].first, start_c + coord[start_cardinal].second, start_cardinal);
 }
@@ -170,15 +116,10 @@ int main(){
     cin.tie(0);
     ios_base::sync_with_stdio(false);
     string str;
-
     bool neednewline = false;
-
     while(cin >> str){
-        
         if(str == "END")
             break;
-        //if(neednewline)
-         //   cout << endl;
         reset();
         cout << str << endl;
         solve();
@@ -194,7 +135,6 @@ int main(){
                     cout << " ";
                     needspace = false;
                 }
-
                 cout << " (" << p.first << "," << p.second << ")";
                 cnt++;
                 if(cnt == 10){

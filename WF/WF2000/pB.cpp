@@ -17,10 +17,8 @@ void recurSum(vector<int>& V, stack<char>& ansChar, int index, long long sum){
 
             while(copyAns.size()){
                 copyAns2.emplace(copyAns.top());
-           //     cout << copyAns.top();
                 copyAns.pop();
             }
-            //cout << endl;
 
             copyAns2.pop();
             cout << "  ";
@@ -36,9 +34,6 @@ void recurSum(vector<int>& V, stack<char>& ansChar, int index, long long sum){
         }
         return;
     }
-#ifdef DEBUG2
-    cout << "cur sum " << sum << " index = " << index << endl;
-#endif
 // plus part
     ansChar.emplace('+');
     long long mul = 1;
@@ -67,23 +62,14 @@ void recurSum(vector<int>& V, stack<char>& ansChar, int index, long long sum){
         ansChar.pop();
     }
 // ----
-#ifdef DEBUG2
-    cout << "go back \n";
-#endif
 }
 
 void parseEvaluate()
 {
-#ifdef DEBUG
-    cout << "what we get in stack ";
-#endif
     stack<int> S2(S);
     while(!S2.empty()){
         revS.emplace(S2.top());
         S2.pop();
-#ifdef DEBUG
-        cout << S.top() << "\n";
-#endif
     }
     vector<int> V;
     while(!revS.empty()){
@@ -91,12 +77,6 @@ void parseEvaluate()
         revS.pop();
     }
     stack<char> ansChar;
-#ifdef DEBUG2
-    cout << "parsed: ";
-    for(auto p: V)
-        cout << p << " ";
-    cout << endl;
-#endif
     recurSum(V, ansChar, 0, 0);
     // put them back
 }
@@ -126,7 +106,6 @@ void solve(int index, string& str){
 int main(){
 //  cin.tie(0);
     ios_base::sync_with_stdio(false);
-
     string str;
     int cnt = 0;
     while(cin >> str){

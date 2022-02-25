@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define MAXD 1e20
+#define MAXD 10000000000.0
 #define MIND 0.0
 
 /*
@@ -97,11 +97,6 @@ struct Line
     Point<T> vec() const { return ed - st; }
     T ori(const Point<T> p) const { return (ed - st) ^ (p - st); }
     Line(const Point<T> x, const Point<T> y) : st(x), ed(y) {}
-    template<class F> 
-    Line(const Point<F> x, const Point<F> y) {
-        st = Point<T>(x);
-        ed = Point<T>(y);
-    }
     template <class F>
     operator Line<F>() const
     {
@@ -182,6 +177,61 @@ Polygon<F> getConvexHull(Polygon <F> points) {
     return CH;
 }
 
+int getFarestFromLine(Polygon<int>& hull, Line<int> &L, int start, int end){
+    double dis = 0;
+    int antiPIndex = start;
+    for (int i = (start); i != end; i = next(i, hull.size()))
+    {
+        double curdis = L.disP2Line(hull[i]);
+        //cout << "dis of line (" << L.st << ", " << L.ed << ") and Point (" << hull[i] << ") is " << curdis << endl;
+        if (dis <= curdis)
+        {
+            antiPIndex = i;
+            dis = curdis;
+        }else
+            break;
+    }
+    return antiPIndex;
+}
+
+double getMinArea(Polygon<int>& hull, Line<int>&L, int top){
+    Point<double> Lmost(L.st), Rmost(L.ed);
+    double Lmostdis, Rmostdis;
+    Lmostdis = Rmostdis = 0.0;
+    Point<double> refer(L.st);
+
+    for(Point<int> pt: hull){
+        //if(pt == L.st || pt == L.ed)
+        //    continue;
+
+        Point<double> proj = L.projection(pt);
+        double curdis = Line<double>(refer, proj).vec().norm();
+        if(Line<double>(refer, Point<double>(pt)).ori(proj) > 0){
+            if(Lmostdis < curdis){
+                Lmost = proj;
+                Lmostdis = curdis;
+            }
+        }else{
+            if(Rmostdis  < curdis){
+                Rmost = proj;
+                Rmostdis = curdis;
+            }
+        }
+    }
+    double top2L = L.disP2Line(hull[top]);
+    double LRdis = Line<double>((Lmost), (Rmost)).vec().norm();
+    double ans = L.disP2Line(hull[top]) * LRdis;
+    // ? constant really large
+    // NOTE Elliminated 
+#ifdef DEBUGMIN
+    cout << "top = (" << hull[top] << ") ";
+    cout << "top 2 L dis = " << top2L << endl;
+    cout << "Lmost: " << Lmost << " dis = " << Lmostdis << endl;
+    cout << "Rmost: " << Rmost << " dis = " << Rmostdis << endl;
+    cout << "MinArea Ans = " << ans << endl;
+#endif
+    return ans;
+}
 
 double getAreabyLine(Polygon<int>& hull, Line<double>& L){
     Point<double> Lmost(L.st), Rmost(L.ed);
@@ -223,12 +273,25 @@ double getAreabyLine(Polygon<int>& hull, Line<double>& L){
 }
 
 
-double getMaxArea(Polygon<int>& hull, Line<double>& LB, Line<double&> RB, int thepoint){
+double getMaxArea(Polygon<int>& hull, Line<int>& LB, Line<int&> RB, int thepoint){
     Point<double> d_thept = Point<double>(hull[thepoint]);
     double maxA = 0.0;
 
-    double RRad = (RB.st.y - RB.ed.y) / (RB.st.x - RB.ed.x);
-    double LRad = (LB.st.y - LB.ed.y) / (LB.st.x - LB.ed.x);
+    double LRad = atan(abs((LB.st.y - LB.ed.y) / (LB.st.x - LB.ed.x)));
+    double RRad = atan(abs((RB.st.y - RB.ed.y) / (RB.st.x - RB.ed.x)));
+    if(LB.st.x < LB.ed.x){
+        LRad = M_PI - LRad;
+    }
+    if(LB.st.y < LB.ed.y){
+        LRad = 2 * M_PI - LRad;
+    }
+    if(RB.ed.x < RB.st.x)
+        RRad = M_PI - RRad;
+    if(RB.ed.y < RB.st.y)
+        RRad = 2 * M_PI - RRad;
+    RRad += M_PI;
+    if(RRad < LRad)
+        RRad += 2 * M_PI;
 #ifdef DEBUGMAX
     cout << "the point of Max = " << d_thept << endl;
     cout << "the point of LB.st = " << LB.st << endl;
@@ -236,18 +299,12 @@ double getMaxArea(Polygon<int>& hull, Line<double>& LB, Line<double&> RB, int th
     cout << "LRad = " << LRad << ", RRad = " << RRad << endl;
 #endif
 
-    LRad = atan(LRad);
-    RRad = 2 * M_PI + atan(RRad);
-
-    
-    //if(LRad > RRad)
-     //   swap(LRad, RRad);
     double cubicRad;
     double cubicRad2;
     double curARad;
     double curARad2;
 
-    while(RRad - LRad >= 0.0001){
+    while(RRad - LRad >= 0.000001){
         cubicRad = (LRad * 2 + RRad) / 3;
         cubicRad2 = (LRad + RRad * 2) / 3;
 #ifdef DEBUGMAX
@@ -277,21 +334,53 @@ void solve(int n){
         P.emplace_back(x, y);
     }
     Polygon<int> hull = getConvexHull(P);
-    double maxA = MIND, minA = MAXD, tmp;
+    double maxA, minA;
+    maxA = MIND;
+    minA = MAXD;
+
 #ifdef DEBUGHULL
     cout << "hull size = " << hull.size() << endl;
     for (Point<int> p : hull){
         std::cout << p << endl;
     }
 #endif
-    Line<double> LBound(hull.back(), hull[0]), RBound(hull[0], hull[1]);
+// find first antipoint.
+    Line<int> LBound(hull.back(), hull[0]);
+    double dis = 0.0;
+    int antiLBoundIndex = getFarestFromLine(hull, LBound, 0, prev(0, hull.size()));
+#ifdef DEBUGANTI
+    cout << "first antiPIndex = " << antiLBoundIndex << "  , ";
+    cout << "first antiP: " << hull[antiLBoundIndex]<< endl;
+#endif
+    Line<int> RBound(hull[0], hull[1]);
+    int antiRBoundIndex;
+    double tmp;
+    Line<double> d_RBound(RBound), d_LBound(LBound);
     for (int i = 0; i < hull.size(); i++)
     {
-        RBound = Line<double>(hull[i], hull[next(i, hull.size())]);
+        RBound = Line<int>(hull[i], hull[next(i, hull.size())]);
+        d_RBound = Line<double>(RBound);
+        //antiRBoundIndex = getFarestFromLine(hull, RBound, antiLBoundIndex,i);
+#ifdef DEBUGANTI
+        cout << "possible antiPindex for point " << hull[i] << ": \n";
+        for (int j = antiLBoundIndex; j != next(antiRBoundIndex, hull.size()); j = next(j, hull.size())){
+            cout << "(" << hull[j] << "), ";
+        }
+        cout << endl;
+#endif
         // <----- renew min ----->
-        tmp = getAreabyLine(hull, (LBound));
+        /*
+        for (int j = antiLBoundIndex; j != next(antiRBoundIndex, hull.size()); j = next(j, hull.size())){
+            if(hull[j] != LBound.st && hull[j] != LBound.ed){
+                tmp = getMinArea(hull, LBound, j);
+                minA = minA < tmp ? minA : tmp;
+            }
+        }
+        */
+       
+        tmp = getAreabyLine(hull, (d_LBound));
         minA = minA < tmp ? minA : tmp;
-        tmp = getAreabyLine(hull, (RBound));
+        tmp = getAreabyLine(hull, (d_RBound));
         minA = minA < tmp ? minA : tmp;
 
         // <----- renew max ----->
@@ -299,9 +388,13 @@ void solve(int n){
 #ifdef DEBUGMAX
         if(maxA < tmp)
             cout << "renew to " << tmp << endl;
+
 #endif
         maxA = maxA > tmp ? maxA : tmp;
+        // renew antiPindex;
+        antiLBoundIndex = antiRBoundIndex;
         LBound = RBound;
+        d_LBound = Line<double>(LBound);
     }
 
     cout << "Minimum area = " << sqrt(minA) << endl;

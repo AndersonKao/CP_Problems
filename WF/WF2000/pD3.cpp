@@ -1,15 +1,20 @@
+// AC 2022-02-25 01:15:50
+// Correct BF version A*sin(alpha)*B*sin(1/2pi+C-alpha)
+// refer https://blog.csdn.net/Fuxey/article/details/50410233
 #include <bits/stdc++.h>
 using namespace std;
+using LL = long long;
 #define MAXD 1e20
 #define MIND -1 
+const double eps = 1e-10;
 
 const int INSIDE = -1;
 const int BOUNDARY = 0;
 const int OUTSIDE = 1;
-
+int dcmp(double a) { return fabs(a) < eps ? 0 : (a < 0 ? -1 : 1); };
 inline int prev(int i, int n) { return i == 0 ? n - 1 : i - 1; }
 inline int next(int i, int n) { return i == n - 1 ? 0 : i + 1; }
-
+#define rad2A(a) (a / M_PI * 180.0)
 template <class T> inline int sgn(const T& x){
     return (T(0) < x) - (x < T(0));
 }
@@ -61,6 +66,15 @@ struct Point
     {
         return x == b.x ? y < b.y : x < b.x;
     } // 字 典 序
+    Real Angle(){
+        return atan2(y, x);
+    }
+    Real turnAngle(const Point L2){
+        return atan2((*this) ^ L2, (*this) & L2);
+    }
+    Point Rotate(double rad){
+        return Point(x * cos(rad) - y * sin(rad), x * sin(rad) + y * cos(rad));
+    }
 
     Point operator-() const { return Point(-x, -y); }
     T norm() const { return *this & *this; }    // 歐 式 長 度 平 方
@@ -72,6 +86,7 @@ struct Point
     template<class F>
     friend ostream &operator<<(ostream &os, const Point<F> &pt);
 };
+using Vector = Point<double>;
 template <class F>
 ostream &operator<<(ostream &os, const Point<F> &pt)
 {
@@ -144,6 +159,8 @@ struct Line
     {
         return operator()(((p - st) & vec()) / (Real)(vec().norm()));
     }
+  
+
 };
 template <class F>
 using Polygon = vector<Point<F>>;
@@ -153,10 +170,6 @@ Polygon<F> getConvexHull(Polygon <F> points) {
     sort(points.begin(), points.end());
     Polygon<F> CH;
     CH.reserve(points.size() + 1); // for what ??
-    // ? reason
-//  CH.emplace_back(points[0]);
-//  CH.emplace_back(points[1]); 
-// ! ^^^ no need for this because we have `while (size >= 2...)`
     for (int round = 0; round < 2; round++){
         int start = CH.size();
         for (Point<F> &pt: points) {
@@ -170,89 +183,14 @@ Polygon<F> getConvexHull(Polygon <F> points) {
         
         reverse(points.begin(), points.end());
     }
-    // ? shoule we need this edge case ? from senpai.
-    //if (CH.size() == 2 && CH[0] == CH[1]) CH.pop_back()
+    if (CH.size() == 2 && CH[0] == CH[1])
+        CH.pop_back();
     return CH;
 }
 
-
-template <typename T>
-double getAreabyLine(Polygon<long long>& hull, Line<T>& L){
-    Point<double> Lmost(L.st), Rmost(L.ed);
-    double Lmostdis, Rmostdis, height;
-    Lmostdis = Rmostdis = height = 0.0;
-    Point<double> refer(L.st);
-    Point<double> proj;
-    double curheight, curdis;
-    Point<double> d_pt;
-    for(Point<long long> pt: hull){
-        d_pt = Point<double>(pt);
-        proj = L.projection(d_pt);
-        curdis = Line<double>(refer, proj).vec().norm();
-        if(Line<double>(refer, d_pt).ori(proj) > 0){
-            if(Lmostdis < curdis){
-                Lmost = proj;
-                Lmostdis = curdis;
-            }
-        }else{
-            if(Rmostdis  < curdis){
-                Rmost = proj;
-                Rmostdis = curdis;
-            }
-        }
-        curheight = L.disP2Line(d_pt);
-        height = height > curheight ? height : curheight;
-    }
-    double LRdis = Line<double>((Lmost), (Rmost)).vec().norm();
-    double ans = height * LRdis;
-    // ? constant really large
-    // NOTE Elliminated 
-    return ans;
+double getAreabyAlpha(Polygon<LL>&hull, int vu, int vd, int vl, int vr, double Rad, double C){
+    return sqrt(Vector(hull[vu] - hull[vd]).norm() * Vector(hull[vl] - hull[vr]).norm()) * sin(Rad) * (sin(M_PI / 2 + C - Rad));
 }
-
-
-double getMaxArea(Polygon<long long>& hull, Line<double>& LB, Line<double&> RB, int thepoint){
-    Point<double> d_thept = Point<double>(hull[thepoint]);
-    double maxA = 0.0;
-
-    double LRad = atan(abs((LB.st.y - LB.ed.y) / (LB.st.x - LB.ed.x)));
-    double RRad = atan(abs((RB.st.y - RB.ed.y) / (RB.st.x - RB.ed.x)));
-    if(LB.st.x < LB.ed.x){
-        LRad = M_PI - LRad;
-    }
-    if(LB.st.y < LB.ed.y){
-        LRad = 2 * M_PI - LRad;
-    }
-    if(RB.ed.x < RB.st.x)
-        RRad = M_PI - RRad;
-    if(RB.ed.y < RB.st.y)
-        RRad = 2 * M_PI - RRad;
-    RRad += M_PI;
-    if(RRad < LRad)
-        RRad += 2 * M_PI;
-    
-    double cubicRad;
-    double cubicRad2;
-    double curARad;
-    double curARad2;
-
-    while(RRad - LRad >= 0.0000001){
-        cubicRad = (LRad * 2 + RRad) / 3;
-        cubicRad2 = (LRad + RRad * 2) / 3;
-        Line<double> Base(d_thept, Point<double>(d_thept.x + cos(cubicRad), d_thept.y + sin(cubicRad)));
-        curARad = getAreabyLine(hull, Base);
-
-        Base = Line<double>(Point<double>(hull[thepoint]), Point<double>(hull[thepoint].x + cos(cubicRad2), hull[thepoint].y + sin(cubicRad2)));
-        curARad2 = getAreabyLine(hull, Base);
-
-        if(curARad2 > curARad){
-            LRad = cubicRad;
-        }else
-            RRad = cubicRad2;
-    }
-    return max(curARad, curARad2);
-}
-
 void solve(int n){
     Polygon<long long> P;
     long long x, y;
@@ -261,25 +199,77 @@ void solve(int n){
         P.emplace_back(x, y);
     }
     Polygon<long long> hull = getConvexHull(P);
+    int H = hull.size();
     double maxA = MIND, minA = MAXD, tmp;
-    Line<double> LBound(hull.back(), hull[0]), RBound(hull[0], hull[1]);
-    for (int i = 0; i < hull.size(); i++)
-    {
-        RBound = Line<double>(hull[i], hull[next(i, hull.size())]);
-        // <----- renew min ----->
-        tmp = getAreabyLine(hull, (LBound));
-        minA = minA < tmp ? minA : tmp;
-        tmp = getAreabyLine(hull, (RBound));
-        minA = minA < tmp ? minA : tmp;
+    double Minx = hull[0].x, Miny = hull[0].y, Maxx = hull[0].x, Maxy = hull[0].y;
+    int vu, vd, vr, vl;
+    vu = vd = vr = vl = 0;
+    Vector v1(1.0, 0.0);
+    Vector v2(0.0, 1.0);
 
-        // <----- renew max ----->
-        tmp = getMaxArea(hull, LBound, RBound, i);
-        maxA = maxA > tmp ? maxA : tmp;
-        LBound = RBound;
+    Vector ori(v1);
+    
+    for(int i = 0; i < hull.size(); i++){
+        if(Minx > hull[i].x){
+            Minx = hull[i].x;
+            vl = i;
+        }else if(Miny > hull[i].y){
+            Miny = hull[i].y;
+            vd = i;
+        }else if(Maxx < hull[i].x){
+            Maxx = hull[i].x;
+            vr = i;
+        }else if(Maxy < hull[i].y){
+            Maxy = hull[i].y;
+            vu = i;
+        }
+    }
+    
+    while(dcmp((ori^v1) >= 0)){ // 線還沒有轉回到原本的線
+        // 找到本次最小可以旋轉的角度
+        double MinRad = MAXD;
+        MinRad = min(MinRad,v1.turnAngle(Vector(hull[next(vd, H)] - hull[vd])));
+        MinRad = min(MinRad,(-v1).turnAngle(Vector(hull[next(vu, H)] - hull[vu])));
+        MinRad = min(MinRad,v2.turnAngle(Vector(hull[next(vr, H)] - hull[vr])));
+        MinRad = min(MinRad, (-v2).turnAngle(Vector(hull[next(vl, H)] - hull[vl])));
+        // 找到逆時針最小可以旋轉的角度
+        double LMinRad = MAXD;
+        LMinRad = min(LMinRad, Vector( hull[prev(vd, H)] - hull[vd]).turnAngle(-v1));
+        LMinRad = min( LMinRad, (Vector(hull[prev(vu, H)]- hull[vu])).turnAngle(v1));
+        LMinRad = min( LMinRad, (Vector(hull[prev(vr, H)]- hull[vr])).turnAngle(-v2));
+        LMinRad = min(LMinRad, (Vector(hull[prev(vl, H)]- hull[vl])).turnAngle(v2));
+        // Rad C
+        double CRad = Vector(hull[vr] - hull[vl]).turnAngle(Vector(hull[vu] - hull[vd]));
+
+        double MaxAreaRad = (M_PI / 2 + CRad)/2;
+        double alpha = v1.turnAngle(Vector(hull[vu] - hull[vd]));
+
+        double maxAlpha = (alpha + LMinRad);
+        double minAlpha = alpha - MinRad;
+
+        // renew min Answer
+        minA = min(minA, getAreabyAlpha(hull, vu, vd, vl, vr, minAlpha, CRad));
+        minA = min(minA, getAreabyAlpha(hull, vu, vd, vl, vr, maxAlpha, CRad));
+        // renew max Answer
+        if(dcmp(MaxAreaRad - maxAlpha) == -1 && dcmp(MaxAreaRad - minAlpha) == 1){
+            maxA = max(maxA, getAreabyAlpha(hull, vu, vd, vl, vr, MaxAreaRad, CRad));
+        }else{
+            maxA = max(maxA, getAreabyAlpha(hull, vu, vd, vl, vr, minAlpha, CRad));
+            maxA = max(maxA, getAreabyAlpha(hull, vu, vd, vl, vr, maxAlpha, CRad));
+        }
+        // renew edge by MinRad
+        v1 = v1.Rotate(MinRad);
+        v2 = v2.Rotate(MinRad);
+
+        // 更新四點
+        if( dcmp(v1.turnAngle(Point<double>(hull[next(vd, H)] - hull[vd]))) == 0)           vd = next(vd, H);
+        if( dcmp((-v1).turnAngle(Point<double>(hull[next(vu, H)] - hull[vu]))) == 0) vu = next(vu, H);
+        if( dcmp(v2.turnAngle(Point<double>(hull[next(vr, H)] - hull[vr]))) == 0) vr = next(vr, H);
+        if( dcmp((-v2).turnAngle(Point<double>(hull[next(vl, H)] - hull[vl]))) == 0) vl = next(vl, H);
     }
 
-    cout << "Minimum area = " << sqrt(minA) << endl;
-    cout << "Maximum area = " << sqrt(maxA) << endl;
+    cout << "Minimum area = " << (minA) << endl;
+    cout << "Maximum area = " << (maxA) << endl;
 }
 
 int main(){
@@ -295,6 +285,5 @@ int main(){
         solve(n);
         cout << endl;
     }
-
     return 0;
 }
