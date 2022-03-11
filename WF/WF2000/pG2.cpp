@@ -70,10 +70,12 @@ int main(){
         }
         //personnelinfor(K);
         // start loop
+        // 掃描線
         long long curtime = 0;
         bool end = false;
         while(!end){
             LL nextcurtime = LLONG_MAX;
+            // nextcurtime = min(在忙的人們第一個做完的時間, 空閒但找不到工作的人們第一個找的到工作的時間, 空閒且現在找到工作的人們第一個做完的時間)。
             sort(personnel, personnel + K, cmp);
             for (int i = 0; i < K; i++){
                 if(personnel[i].whenavail > curtime){

@@ -25,7 +25,6 @@ void solve(){
     while(cin >> a >> b){
         if(a == 0 && b == 0)
             break;
-    //    cout << "get a, b = " << a << " " << b << endl;
         a--;
         b--;
         dis[a][b] = 1;

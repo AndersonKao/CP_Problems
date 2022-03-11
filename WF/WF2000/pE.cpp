@@ -2,6 +2,7 @@
 using namespace std;
 
 // O((V+E)F)
+// Ford Fulkerson
 #define MAXN 101
 // remember to change used into the maxNode size -- kattis elementary math
 bool used[MAXN];
@@ -10,7 +11,7 @@ vector<int> V[MAXN];
 vector<tuple<int, int>> E;
 
 // x=>y 可以流 C 
-// if undirected or 2-direc edge, bakcward Capacity become C;
+// if undirected or 2-directed edge, backward Capacity become C;
 // Graph build by edge array
 // 反向邊的編號只要把自己的編號 xor 1 就能取得
 void add_edge(int x, int y,int c)

@@ -182,12 +182,9 @@ int main(){
 }
 void solve(double a, double b, double c, double *arr){
     // larger than maximum inscribed circle.
-    //cout << "len " << a << ", " << b << ", " << c << endl;
     double s = (a + b + c) / 2;
     double Area= sqrt(s * (s - a) * (s - b) * (s - c)) ;
     double maxR = Area / (a + b + c) * 2;
-
-    //cout << "maximum Diameter = " << maxR << endl;
 
     for (int i = 0; i < 6; i++){
         if(arr[i] > maxR){
@@ -205,20 +202,13 @@ void solve(double a, double b, double c, double *arr){
     Vertexs[0] = Point<double>(0, 0);
     Vertexs[1] = Point<double>(b, 0);
     double h = 2 * Area / b;
-    //cout << "h : " << h << endl;
     Vertexs[2] = Point<double>((a * a + b * b > c * c ? 1 : -1) * sqrt((double)a * a - h * h), h);
     double len[3] = {c, a, b};
     Point<double> innerP(0,0);
     for (int i = 0; i < 3; i++){
         innerP = innerP + Vertexs[i] * (double)len[i];
-#ifdef debuginnerP
-        cout << "vertex " << i << " at position " << Vertexs[i] << endl;
-#endif
     }
     innerP = innerP / (double)(a + b + c);
-#ifdef debuginnerP
-    cout << "InnerP position: " << innerP << endl;
-#endif
 
     vector<pdd> V; // diameter arrange;
     for (int i = 0; i < 6; i += 2){
@@ -233,20 +223,10 @@ void solve(double a, double b, double c, double *arr){
             Line<double> tmP(Vertexs[i], innerP);
             centers[i] = Vertexs[i] + tmP.vec() * (max(V[i].first, V[i].second) / maxR);
         }
-#ifdef debugarrange
-        cout << "new arrange ----------- \n";
-        for (int i = 0; i < 3; i++){
-            cout << "center " << i << " with dia = " << V[i].first << " or " << V[i].second << endl;
-            cout << "at " << centers[i] << endl;
-        }
-#endif
         Possi(Vertexs, centers, V, innerP);
         if(solved)
             return;
     } while (next_permutation(V.begin(), V.end()));
-#ifdef debugout
-    cout << "not solved\n";
-#endif
 
 }
 void Possi(vector<Point<double>> & Vertexs, vector<Point<double>> &centers, vector<pdd>& dias, Point<double> innerP){
@@ -257,20 +237,7 @@ void Possi(vector<Point<double>> & Vertexs, vector<Point<double>> &centers, vect
                 swap(diasecond[j].first, diasecond[j].second);
             }
         }
-
-#ifdef debugud
-        
-        cout << "current up " << endl;
-        for (int j = 0; j < 3; j++)
-            cout << diasecond[j].first << ", ";
-        cout << endl;
-        cout << "current down  " << endl;
-        for (int j = 0; j < 3; j++)
-            cout << diasecond[j].second<< ", ";
-        cout << endl;
-#endif
         if(valid(centers, diasecond)){
-            //cout << "valid for this set!!!-------\n";
             solved = true;
             return;
         }
@@ -282,23 +249,12 @@ bool valid(vector<Point<double>>& centers, vector<pdd>&dias){
     for (int i = 0; i < 3; i++){
         int j = next(i, 3);
         Line<double> dis(centers[i], centers[j]);
-        //cout << "st=" << dis.st << ", ed = " << dis.ed << endl;
         double tmp = dias[i].first + dias[j].first;
-        if(dis.vec().norm() < tmp * tmp){
-#ifdef debugnorm
-            cout << "node " << i << " and node " << j << endl;
-            cout << "dis.vec().norm() = " << dis.vec().norm() << ", availdis^2= " << tmp * tmp << endl;
-#endif
+        if(dis.vec().norm() < tmp * tmp)
             return false;
-        }
         tmp = dias[i].second + dias[j].second;
-        if(dis.vec().norm() < tmp * tmp){
-#ifdef debugnorm
-            cout << "node " << i << " and node " << j << endl;
-            cout << "dis.vec().norm() = " << dis.vec().norm() << ", diameter^2= " << tmp * tmp << endl;
-#endif
+        if(dis.vec().norm() < tmp * tmp)
             return false;
-        }
     }
    return true;
 }
