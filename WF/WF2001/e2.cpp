@@ -1,7 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 //#define debugDuck
-//#define movement
 #define F first
 #define S second
 #define X first
@@ -37,7 +36,7 @@ int m, n, k; // m -> x, n -> y.
 double dm,dn;
 vec<pll> duck;
 vector<vector<int>> dstep;
-vec<vec<bool>> vis;
+vec<vec<int>> vis;
 vec<pii> ANSs;
 #define DL 0 // 00
 #define DR 1 // 01
@@ -50,7 +49,6 @@ void init(){
     dstep.clear();
     dstep.resize(k);
 	ANSs.clear();
-	vis.resize(m, vec<bool>(n));
 }
 int startpt(int did){ 
     int ans = 0;
@@ -115,9 +113,9 @@ ll gcd(ll a, ll b){
 }
 bool isint(pll b, ll t){
 	if(b.S == 1)
-		return (((1 + b.F * t) & 1) == 0);
+		return (((b.F * t) & 1) == 0);
 	if(t % b.S == 0){
-		return (((1 + b.F * t / b.S) & 1) == 0);
+		return ((b.F * (b.S / t) & 1) == 0);
 	}
 	return false;
 }
@@ -131,26 +129,25 @@ void precal(int did){
 	axe.S /= agcd;
 	//debugp(axe);
 	ll xt = 0; // xtimes;
-	int st = 0;
+	ll curx = 1;
 	
     int roundT = abs(duck[did].S) * 2;
     REP(tmp, roundT){
+#ifdef debugDuck
+		cout << "ouodb----------------\n";
+#endif
 		xt++;
 		ll nextx = 1 + (axe.F * xt) / axe.S; 
-	   	int	end = nextx >> 1;
+		int st = (curx & 1) ? curx >> 1 : (curx - 1) >> 1;
+	   	int	end = (nextx & 1) ? nextx>> 1 : (nextx- 1) >> 1;
+		st = curx >> 1;
+		end = nextx >> 1;
 		/*
 		debug(tmp);
 		debug(curx);
 		debug(nextx);
 		*/
-#ifdef debugDuck
-		cout << "ouodb----------------\n";
-		debug(st);
-		debug(end);
-		debug(nextx);
-#endif
 				
-		
         if ((tmp & 1) == 0) {
 #ifdef debugDuck
 			cout << "eve\n";
@@ -158,10 +155,10 @@ void precal(int did){
             bool cornor= false;
             if (isint(axe, xt)) {
                 cornor = true;
-#ifdef debugDuck
+				/*
 				cout << "cornor at xt = " << xt << "\n";
 				debugp(axe);
-#endif
+				*/
             }
 
             for(int i = st; i < end - cornor; i++){// avoid more step in the end
@@ -169,6 +166,7 @@ void precal(int did){
             }
 			if(cornor)
 				dstep[did].eb(R);
+
             dstep[did].eb(U);
         }else{
 #ifdef debugDuck
@@ -178,7 +176,7 @@ void precal(int did){
                 dstep[did].eb(R);
             }
         }
-		st = end;
+		curx = nextx;
 #ifdef debugDuck
     for(int d: dstep[did]){
         switch(d){
@@ -238,22 +236,22 @@ pii simulate(int a, int b){
     int tstp = 1;
     bool stopA, stopB;
     stopA = stopB = false;
-	fill(al(vis), vec<bool>(n, false));
-	
-	int cnt = 2;
+	vis.clear();
+	vis.resize(m, vec<int>(n, 0));
     vis[posA.X][posA.Y] =vis[posB.X][posB.Y] = true;
-
-#ifdef movement
+	
+	int Acnt = 1;
+	int Bcnt = 1;
+/*
 	cout << "processing \n";
 	debug(a);
 	debug(b);
-#endif
+*/
     while(!stopA || !stopB){
-
-#ifdef movement
+/*
 		debugp(posA);
 		debugp(posB);
-#endif
+*/
 		if(!stopA){
 			nposA.X = posA.X + mD[dstep[a][Ai]].X;
 			nposA.Y = posA.Y + mD[dstep[a][Ai]].Y;
@@ -280,46 +278,38 @@ pii simulate(int a, int b){
 		if(nposB.Y < 0)
 			nposB.Y = n - 1;
 		// mutually
-#ifdef movement
-		debugp(nposA);
-		debugp(nposB);
-#endif
-		// Case 3
+//		debugp(nposA);
+//		debugp(nposB);
 		if(nposB == posA && nposA == posB){
 			stopA = true;
 			stopB = true;
-#ifdef movement
-			cout << "collide\n";
-#endif
+//			cout << "collide\n";
 			break;
 		}
 		
-		// Case 2
-		if(nposA == nposB ){
-			if (!vis[nposA.X][nposA.Y]) {
-				cnt++;
-				tstp++;
-			}
+		if(nposA == nposB){
+			Acnt++;
 			break;
 		}
 		
 		if(vis[nposA.X][nposA.Y])
 			stopA = true;
 		else{
-			++cnt;
-			vis[nposA.X][nposA.Y] = true;
+			++Acnt;
 		}
+		vis[nposA.X][nposA.Y] = true;
 		if(vis[nposB.X][nposB.Y])
 			stopB = true;
 		else{
 			vis[nposB.X][nposB.Y] = true;
-			++cnt;
+			if(nposB != nposA)
+				Bcnt++;
 		}
-		if(!stopA || !stopB)
-			tstp++;
 		Ai = next(Ai, dstep[a].size()); 
 		Bi = next(Bi, dstep[b].size()); 
 		posB = nposB, posA = nposA;	
+		if(!stopA || !stopB)
+			tstp++;
     }
 /*
 	for(vec<int>& a: vis){
@@ -329,13 +319,11 @@ pii simulate(int a, int b){
 		cout << endl;
 
 	}
-*/
-#ifdef movement
+
 		debugp(posA);
 		debugp(posB);
-#endif
-
-    return pii(cnt, tstp);
+*/
+    return pii(Acnt + Bcnt, tstp);
 }
 
 int main(){
@@ -397,4 +385,5 @@ int main(){
     }
     return 0;
 }
+
 
