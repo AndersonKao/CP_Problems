@@ -345,9 +345,9 @@ int main(){
     while(cin >> m >> n){
         if(m == 0 && n == 0)
             break;
-        dm = (double)m, dn = (double)n;
-        //debug(dm);
-        //debug(dn);
+//        dm = (double)m, dn = (double)n;
+//        debug(m);
+ //       debug(n);
         cin >> k;
         init();
         REP(i, k){
@@ -360,11 +360,12 @@ int main(){
 		pii curans ;
         REP(i, k){
             for(int j = i + 1; j < k; j++){
-                if(startpt(i) == startpt(j))
+                if(getstart(i) == getstart(j))
                     continue;
+				//debug(startpt(i));
+				//debug(startpt(j));
                 getsimu = simulate(i, j); 
 				/*
-				cout << "i, j= " << i+1 << ", " << j+1  << endl;
 				*/
 				/*
 				if(i == 4 && j == 9){
@@ -372,16 +373,30 @@ int main(){
 					debugp(getsimu);
 				}
 				*/
+
+/*
+if(Case == 97){
+				cout << "i, j= " << i+1 << ", " << j+1  << endl;
+					debugp(getsimu);
+}
+*/
 				if(ANSs.empty()){
 					ANSs.eb(i, j);
 					curans = getsimu;
-	//				debugp(getsimu);
+/*
+if(Case == 97)
+					debugp(getsimu);
+*/
 				}else{
 					if(getsimu.F > curans.F || (getsimu.F == curans.F && getsimu.S < curans.S)){
 						ANSs.clear();
 						ANSs.eb(i, j);
 						curans = getsimu;
-	//					debugp(getsimu);
+/*
+if(Case == 97)
+						debugp(getsimu);
+*/
+
 					}else if(getsimu.F == curans.F && getsimu.S == curans.S){
 						ANSs.eb(i, j);
 					}

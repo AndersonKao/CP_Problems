@@ -2,4 +2,6 @@
 *.in
 *.out
 *.txt
+*.swp
+*.pdf
 .vscode/
