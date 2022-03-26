@@ -1,3 +1,9 @@
+// AC
+// 2022-03-26 11:48:49 
+// self WA
+// 1LL *l *l prevent for overflow
+// WA
+// Notice that When range update (l, r) is val, (r + 1, n) is -val
 #include <bits/stdc++.h>
 using namespace std;
 #define al(a) a.begin(), a.end()
@@ -16,25 +22,17 @@ struct Fenwick{
 		BIT.clear();
 		n = 0;
 	}
-	Fenwick(int n){
-		this->n = n;
-		BIT.resize(this->n, 0);
-	}
-	Fenwick(vec<T> & data){
-		n = data.size() + 1;
-		BIT.resize(n);
-		REP1(i, n)
-			this->modify(i, data[i]);
-	}
 	void Build(int n){
 		this->n = n;
-		BIT.resize(this->n, 0);
+		BIT.resize(this->n + 1, 0);
 	}
 	void Build(vec<T> & data){
-		n = data.size() + 1;
-		BIT.resize(n);
-		REP1(i, n)
-			this->modify(i, data[i]);
+		n = data.size();
+		BIT.resize(n + 1);
+		ll sum = 0;
+		REP1(i, n){
+			this->modify(i, data[i-1]);
+		}
 	}
 	void modify(int i, T val){
 		while(i <= n){
@@ -44,7 +42,7 @@ struct Fenwick{
 	}
 	void rangeModify(int l,int r, T val){
 		this->modify(l, val);
-		this->modify(r + 1, val);
+		this->modify(r + 1, -val);
 	}
 	T query(int i){
 		T ans = 0;
@@ -68,17 +66,17 @@ struct Polynomial_Queries{
 		BITs.resize(6);
 	}
 	void Build(vec<ll> & data){
-		n = data.size() + 1;
+		n = data.size();
 		REP(i, 5)
 			BITs[i].Build(n);
-		BITs[5] = Fenwick<ll>(data);
+		BITs[5].Build(data);
 	}
 	void RangeModify(int l, int r, ll val){
 		BITs[0].rangeModify(l, r, val);
 		BITs[1].rangeModify(l, r, (1- l) * val);
-		BITs[2].rangeModify(l, r, 2);
+		BITs[2].rangeModify(l, r, 1);
 		BITs[3].rangeModify(l, r, 1 - 2 * l);
-		BITs[4].rangeModify(l, r, l * l + l);
+		BITs[4].rangeModify(l, r, l * (l * 1LL)- l);
 		ll len = r - l + 1;
 		ll r_l = r - l;
 		BITs[1].rangeModify(r + 1, n, len * val);
@@ -92,11 +90,12 @@ struct Polynomial_Queries{
 		doubled += BITs[2].query(idx) * idx * idx;
 		doubled += BITs[3].query(idx) * idx;
 		doubled+= BITs[4].query(idx);
-		ans += doubled >> 1;
+		ans += (doubled >> 1);
 		ans += BITs[5].query(idx);
 		return ans;
 	}
 	ll RangeQuery(int l, int r){
+		//cout << Query(r) << ", " << Query(l - 1) << endl;
 		return Query(r) - Query(l - 1);
 	}
 };
