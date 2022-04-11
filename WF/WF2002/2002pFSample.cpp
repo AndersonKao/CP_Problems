@@ -93,15 +93,16 @@ map<int, vector<segment>> getSegments() {
 		int j = (i + 1) % np;
 		int mny = min(pnts[i].Y, pnts[j].Y);
 		int mxy = max(pnts[i].Y, pnts[j].Y);
-		auto nxt = lower_bound(ys, ys+ny, mny);
+		auto nxt = lower_bound(ys, ys + ny, mny);
 		auto end = lower_bound(ys, ys + ny, mxy);
-		for( auto cur = nxt++; cur != end; cur++, nxt++) {
-			double curX = getX(segment(pnts[i], pnts[j]), *cur);
+		for( auto cur = nxt++; cur != end; cur++, nxt++) { // for all points' y in range mny, mxy.
+			double curX = getX(segment(pnts[i], pnts[j]), *cur); // get the intersection of line y=cur and segment(pnts[i], pnts[j]).
 			double nxtX = getX(segment(pnts[i], pnts[j]), *nxt);
 			ret[*cur].emplace_back(point(curX, *cur), point(nxtX, *nxt));
 		}
 	}
 	for (auto &it : ret) {
+		// sort every y segments by midpoint.
 		sort(it.second.begin(), it.second.end(), [](const segment &a, const segment &b) {
 			double xamid = (a.first.X + a.second.X);
 			double xbmid = (b.first.X + b.second.X);
