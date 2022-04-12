@@ -102,7 +102,8 @@ map<int, vector<segment>> getSegments() {
 		}
 	}
 	for (auto &it : ret) {
-		// sort every y segments by midpoint.
+		// sort every segments which are with same y starting value, by their midpoint.
+		// in this way, pair and pair forms a Trapzium.
 		sort(it.second.begin(), it.second.end(), [](const segment &a, const segment &b) {
 			double xamid = (a.first.X + a.second.X);
 			double xbmid = (b.first.X + b.second.X);
@@ -145,6 +146,7 @@ vector<vector<pii>> buildGraph(const vector<vector<Trapezium>> &trapz) {
 					int y = b.left.TOP.Y;
 					ret[b.id].emplace_back(t.id, y);
 					ret[t.id].emplace_back(b.id, y);
+					// ? what is this y for ??
 				}
 			}
 		}
