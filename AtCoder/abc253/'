@@ -1,0 +1,64 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define F first
+#define S second
+#define REP(i, n) for(int i = 0; i < n; i++)
+#define REP1(i, n) for(int i = 1; i <= n; i++)
+using ll = long long;
+template<typename T>
+using vec = vector<T>;
+using pii = pair<int, int>;
+
+#define debug(x) cout << #x << ": " << x << endl;
+
+struct Fenwick{
+	int n;
+	vec<ll> seq;
+	Fenwick(int N){
+		n = N;
+		seq.resize(n + 1, 0);
+	}
+	void modify(int pos, int val){
+		int res = pos;
+		while(res <= n){
+			seq[res] += val;
+			res += (res & -res);
+		}
+	}
+	ll query(int pos){
+		int res = pos;
+		ll ans = 0;
+		while(res >= 1)
+			ans += seq[res];
+			res -= (res & -res);
+		}
+		return ans;
+	}
+};
+
+int main(){
+	int N, M, Q;
+	cin.tie(0), ios_base:sync_with_stdio(false);
+	cin >> N >> M >> Q;
+	vec<vec<pii>> queries(M+1); // r, t
+	vec<vec<pii>> op2(N+1); // t, x;
+	vec<vec<pii>> op1(M+1); // t, x;
+	
+	queries.resize(M);
+	for(int t = 0; t < Q; t++){
+		int op;
+		cin >> op;
+		if(op == 1){
+			int l, r, x;
+			cin >> l >> r >> x;
+		}
+		else if(op == 2){
+			int r, x;
+			cin >> r >> x;
+			op2[r].emplace(t, x);
+		}
+		else if(op == 3){
+		}
+	}
+	return 0;
+}

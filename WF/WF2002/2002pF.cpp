@@ -136,7 +136,6 @@ map<int, vec<segment>> getSegments(){
         int maxy = max(pnts[i].Y, pnts[j].Y);
         viIter nxt = lower_bound(al(onlyY), miny); 
         viIter end = lower_bound(al(onlyY), maxy); 
-//        cout << "nxt " << *nxt << ", end " << *end << endl; 
         for(viIter it = nxt++; it != end; nxt++, it++){
             double botX = getXonSegment(seg, *it);
             double topX = getXonSegment(seg, *nxt);
