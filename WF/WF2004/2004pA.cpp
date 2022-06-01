@@ -9,7 +9,9 @@ using namespace std;
 using pt = complex<int>;
 using pii = pair<int, int>;
 #define debug(x) //cout << #x << ": " << x << "\n";
-#define dept(x) //cout << #x << "(" << x.X << ", " << x.Y << ")\n";
+#define debug2(x) //cout << #x << ": " << x << "\n";
+#define dept(x) cout << #x << "(" << x.X << ", " << x.Y << ")\n";
+
 #define NOTYET 0
 #define HOLD 1
 #define MF 2
@@ -39,6 +41,13 @@ void domap(vec<vec<T>>& map, int x, int y, T val){
 }
 template<typename T>
 T getmap(vec<vec<T>>& map, int x, int y){
+    /*
+    if(x + 100 > 200)
+        cout << "error " << x << endl;
+    else if(y + 100 > 200)
+        cout << "error " << y << endl;
+        */
+
     return map[x + 100][y + 100];
 }
 template<typename T>
@@ -61,6 +70,24 @@ pii antother(vec<vec<vec<int>>>& Antmap, int x, int y, int id){
     }
     return {-1, -1};
 }
+void PrintMap(vec<vec<int>>& Map){
+    for (int y = 10; y >= -10; y--){
+        for (int x = -10; x <= 10; x++){
+            if(Map[x + 100][y + 100] != -1)
+                cout << " ";
+            cout << Map[x + 100][y + 100] << " ";
+        }
+        cout << endl;
+    }
+}
+void PrintIntersect(vec<vec<bool>>& inter){
+    for (int y = 10; y >= -10; y--){
+        for (int x = -10; x <= 10; x++){
+            cout << inter[x + 100][y + 100] << " ";
+        }
+        cout << endl;
+    }
+}
 int main()
 {
     yccc;
@@ -73,9 +100,9 @@ int main()
             cout << endl;
         int n, m, d;
         cin >> n >> m >> d;
-        vec<vec<int>> map(201, vec<int>(201, -1));
-        vec<vec<vec<int>>> Antmap(201, vec<vec<int>>(201, vec<int>(4, -1)));
-        vec<vec<bool>> intersect(201, vec<bool>(201, false));
+        vec<vec<int>> Map(301, vec<int>(301, -1));
+        vec<vec<vec<int>>> Antmap(301, vec<vec<int>>(301, vec<int>(4, -1)));
+        vec<vec<bool>> intersect(301, vec<bool>(301, false));
         vec<ant> Ants(m);
         vec<int> Carl;
         vec<pt> PathSet;
@@ -91,20 +118,20 @@ int main()
                 if(cur.Y < nxt.Y){
                     for (int j = cur.Y; j < nxt.Y; j++){
                         Carl.eb(0);
-                        if(getmap(map, cur.X, j) == 0)
+                        if(getmap(Map, cur.X, j) == 0)
                             domap(intersect, cur.X, j, true);
                         else{
-                            domap(map, cur.X, j, 0);
+                            domap(Map, cur.X, j, 0);
                             PathSet.eb(cur.X, j);
                         }
                     }
                 }else{
                     for (int j = cur.Y; j > nxt.Y; j--){
                         Carl.eb(1);
-                        if(getmap(map, cur.X, j) == 0)
+                        if(getmap(Map, cur.X, j) == 0)
                             domap(intersect, cur.X, j, true);
                         else{
-                            domap(map, cur.X, j, 0);
+                            domap(Map, cur.X, j, 0);
                             PathSet.eb(cur.X, j);
                         }
                     }
@@ -116,20 +143,20 @@ int main()
                 {
                     for (int j = cur.X; j < nxt.X; j++){
                         Carl.eb(3);
-                        if(getmap(map, j, cur.Y) == 0)
+                        if(getmap(Map, j, cur.Y) == 0)
                             domap(intersect, j, cur.Y, true);
                         else{
-                            domap(map, j, cur.Y, 0);
+                            domap(Map, j, cur.Y, 0);
                             PathSet.eb(j, cur.Y);
                         }
                     }
                }else{
                     for (int j = cur.X; j > nxt.X; j--){
                         Carl.eb(2);
-                        if(getmap(map, j, cur.Y) == 0)
+                        if(getmap(Map, j, cur.Y) == 0)
                             domap(intersect, j, cur.Y, true);
                         else{
-                            domap(map, j, cur.Y, 0);
+                            domap(Map, j, cur.Y, 0);
                             PathSet.eb(j, cur.Y);
                         }
                     }
@@ -137,9 +164,21 @@ int main()
             }
             cur = nxt;
         }
+        sort(al(PathSet), [](const pt A, pt B){
+            if (A.X == B.X)
+                return A.Y < B.Y;
+            return A.X < B.X;
+        });
+        //PrintMap(Map);
+        //PrintIntersect(intersect);
         /*
-        for(int&e : Carl){
+        for (int &e : Carl)
+        {
             cout << e << ", ";
+        }
+        cout << endl;
+        for(auto& e: PathSet){
+            cout << "(" << e.X << ", " << e.Y << ") ";
         }
         cout << endl;
         */
@@ -151,17 +190,19 @@ int main()
         vec<int> finish;
         deque<int> emer;
         queue<int> error;
-        vec<vec<vec<int>>> newAMap(201, vec<vec<int>>(201, vec<int>(4, -1)));
+        vec<vec<vec<int>>> newAMap(301, vec<vec<int>>(301, vec<int>(4, -1)));
         int done = 0;
         int t = 0;
         int CarlANS = 0;
         while (done < m)
         {
-            debug(t+1);
+            
+            debug2(t+1);
             fill(al(moved), NOTYET);
+            // reseting newAMap
             for(pt& grid: PathSet){
                 for (int i = 0; i < 4; i++)
-                    newAMap[grid.X][grid.Y][i] = -1;
+                    do3map(newAMap, grid.X, grid.Y, i, -1);
             }
             // Carl move;
             pt &curl = Ants[0].cur_pos;
@@ -177,17 +218,19 @@ int main()
                 }
                 else
                 {
-                    dept(curl);
-                    debug(Carl.size());
-                    domap(map, curl.X, curl.Y, Carl[t]);
+                    //dept(curl);
+                    //debug(Carl.size());
+                    domap(Map, curl.X, curl.Y, Carl[t]);
                     if (getmap(intersect, curl.X, curl.Y) == true)
                     {
                         int another, dirID;
                         tie(another, dirID) = antother(Antmap, curl.X, curl.Y, 0);
                         if (another != -1)
                         {
-                            moved[another] = 1;
+                            moved[another] = HOLD;
                             do3map(newAMap, Ants[another].cur_pos.X, Ants[another].cur_pos.Y, dirID, another);
+                            Ants[another].waitT++;
+                  //          cout << "not move  " << another << endl;
                         }
                     }
                     curl = curl + dir[Carl[t]];
@@ -197,23 +240,27 @@ int main()
                 }
             }
             // Ants move;
+            bool onefromqueue = false;
             for (int i = 1; i < m; i++)
             {
-                if(moved[i] || t < d*i || reached[i])
+                if(moved[i] || t +1< d*i || reached[i])
                     continue;
                 //cout << "moveing " << i << endl;
                 if (t + 1 == d * i){
-                    //cout << "put " << i << " into queue\n";
+                 //   cout << "iput " << i << " into queue\n";
                     emer.emplace_back(i), inque[i] = true, Ants[i].cur_pos = {0, 0};
                     moved[i] = IN_Q;
                 }
                 else{
                     if(inque[i]){
-                        if(emer.front() != i)
+                        if(emer.front() != i || onefromqueue){
+                            moved[i] = IN_Q;
                             continue;
-                        else
-                            emer.pop_front(), inque[i] = false;
-                        //cout << "Grep " << i << " out of queue\n";
+                        }
+                        else{
+                            emer.pop_front(), inque[i] = false, onefromqueue = true;
+                //            cout << "Grep " << i << " out of queue" << endl;
+                        }
                     }
                     pt & tcp = Ants[i].cur_pos;
                     int tomove = i;
@@ -230,6 +277,7 @@ int main()
                         int another, dirID;
                         tie(another, dirID) = antother(Antmap, tcp.X, tcp.Y, i);
                         if(another != -1){
+                            /*
                             if(Ants[another].plen > Ants[tomove].plen){
                                 tomove = another;
                             }
@@ -237,20 +285,24 @@ int main()
                                 if(Ants[another].waitT > Ants[tomove].waitT)
                                     tomove = another;
                             }
+                            */
+                            if(Ants[another].waitT > Ants[tomove].waitT)
+                                tomove = another;
                             int notmove = (tomove == i ? another : i);
+                            dirID = (tomove == i ? dirID : Ants[i].dir);
                             moved[notmove] = HOLD;
                             Ants[notmove].waitT++;
                             do3map(newAMap, Ants[notmove].cur_pos.X, Ants[notmove].cur_pos.Y, dirID, notmove);
-                            //cout << "not move  " << notmove << endl;
+                        //    cout << "not move  " << notmove << endl;
                         }
                     }
                     ant &mover = Ants[tomove];
                     pt &lp = mover.last_pos, &cp = mover.cur_pos;
                     lp = cp;
-                    int dirID = getmap(map, cp.X, cp.Y);
-                    dept(cp);
+                    int dirID = getmap(Map, cp.X, cp.Y);
+                    //dept(cp);
                     cp = cp + dir[dirID];
-                    dept(cp);
+                    //dept(cp);
                     moved[tomove] = 2;
                     mover.plen++;
                     mover.oldT = mover.waitT;
@@ -262,24 +314,42 @@ int main()
             }
 
             for (int i = 1; i < m; i++){
+                if(moved[i] != MF)
+                    continue;
+                
                 pt &cp = Ants[i].cur_pos;
                 int ori = get3map(Antmap, cp.X, cp.Y, Ants[i].dir);
                 if(ori != -1 && ori != i && moved[ori] == 1){
                     error.emplace(i);
+                    do3map(newAMap, cp.X, cp.Y, Ants[i].dir, ori);
                     //cout << " ant " << i << " step on ant " << ori << endl;
-                    dept(Ants[ori].cur_pos);
+                    //dept(Ants[ori].cur_pos);
                 }
             }
 
             while(!error.empty()){
+                
                 int err = error.front();
                 ant &errer = Ants[err];
                 error.pop();
                 pt &cp = errer.cur_pos;
+                /*
+                cout << "go " << err << " back from ";
+                dept(cp);
+                cout << " to ";
+                dept(errer.last_pos);
+                cout << endl;
+                */
                 cp = errer.last_pos;
                 errer.plen--;
+                if(cp == pt(0, 0)){
+                    inque[err] = true;
+                    emer.emplace_front(err);
+                    continue;
+                }
+
                 if(getmap(intersect, cp.X, cp.Y) == true)
-                    Ants[err].waitT = Ants[err].oldT + 1;
+                    Ants[err].waitT = Ants[err].oldT;
                 int ori = get3map(newAMap, cp.X, cp.Y, Ants[err].ldir);
                 if(ori != -1)
                     error.emplace(ori);
@@ -287,17 +357,36 @@ int main()
                 errer.dir = errer.ldir;
             }
             //Antmap = newAMap;
-            for(pt& grid: PathSet){
-                vec<int> &Old = Antmap[grid.X][grid.Y];
-                vec<int> &New = newAMap[grid.X][grid.Y];
-                for (int i = 0;i < 4; i++){
-                    Old[i] = New[i];
+            for (int i = 0; i < m; i++){
+                pt &cp = Ants[i].last_pos;
+                for(int j = 0; j < 4; j++){
+                        do3map(Antmap, cp.X, cp.Y, j, -1);
                 }
             }
+            for (int i = 0; i < m; i++){
+                pt &cp = Ants[i].cur_pos;
+                for(int j = 0; j < 4; j++){
+                    do3map(Antmap, cp.X, cp.Y, j, get3map(newAMap, cp.X, cp.Y, j));
+                }
+            }
+            //swap(Antmap, newAMap);
             /*
-            for (int i = 0; i < m;i++){
-                //cout << "Ant " << i << " at : " << Ants[i].cur_pos.X << ", " << Ants[i].cur_pos.Y  << "\n";
-                //cout << Ants[i].plen << ", " << Ants[i].waitT << endl;
+            for (pt &grid : PathSet)
+            {
+                cout << "pos ";
+                dept(grid);
+                cout << " with " ;
+                for (int i = 0; i < 4; i++)
+                {
+                    do3map(Antmap, grid.X, grid.Y, i, get3map(newAMap, grid.X, grid.Y, i));
+                    //    cout << i <<": " << get3map(Antmap, grid.X, grid.Y, i) << ", ";
+                }
+                // cout << endl;
+                }
+            cout << "time: " << t + 1 << endl;
+            for (int i = 0; i < min(20, m);i++){
+                cout << "Ant " << i << " at : " << Ants[i].cur_pos.X << ", " << Ants[i].cur_pos.Y  << "\n";
+                cout << Ants[i].plen << ", " << Ants[i].waitT << " dir " << Ants[i].dir<< endl;
             }
             */
             t++;
