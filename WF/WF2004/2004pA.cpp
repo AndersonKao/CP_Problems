@@ -1,3 +1,4 @@
+// AC using Antpos not PathSet to renew map
 #include <bits/stdc++.h>
 using namespace std;
 #define yccc cin.tie(0), ios_base::sync_with_stdio(false);
@@ -30,7 +31,7 @@ struct ant{
     pt cur_pos, last_pos;
     int waitT, oldT; // waited time;
     int plen;  // pathlen
-    int dir = 0, ldir;
+    int dir = -1, ldir = -1;
     ant() : cur_pos(0, 0), last_pos(0, 0), waitT(0), plen(0)
     {
     }
@@ -88,6 +89,7 @@ void PrintIntersect(vec<vec<bool>>& inter){
         cout << endl;
     }
 }
+const int LEN = 205;
 int main()
 {
     yccc;
@@ -100,12 +102,12 @@ int main()
             cout << endl;
         int n, m, d;
         cin >> n >> m >> d;
-        vec<vec<int>> Map(301, vec<int>(301, -1));
-        vec<vec<vec<int>>> Antmap(301, vec<vec<int>>(301, vec<int>(4, -1)));
-        vec<vec<bool>> intersect(301, vec<bool>(301, false));
+        vec<vec<int>> Map(LEN, vec<int>(LEN, -1));
+        vec<vec<vec<int>>> Antmap(LEN, vec<vec<int>>(LEN, vec<int>(4, -1)));
+        vec<vec<bool>> intersect(LEN, vec<bool>(LEN, false));
         vec<ant> Ants(m);
         vec<int> Carl;
-        vec<pt> PathSet;
+//        vec<pt> PathSet;
         pt END;
         pt cur(0, 0);
         for(int i = 0; i < n; i++){
@@ -122,7 +124,7 @@ int main()
                             domap(intersect, cur.X, j, true);
                         else{
                             domap(Map, cur.X, j, 0);
-                            PathSet.eb(cur.X, j);
+                            //PathSet.eb(cur.X, j);
                         }
                     }
                 }else{
@@ -132,7 +134,7 @@ int main()
                             domap(intersect, cur.X, j, true);
                         else{
                             domap(Map, cur.X, j, 0);
-                            PathSet.eb(cur.X, j);
+                            //PathSet.eb(cur.X, j);
                         }
                     }
                 }
@@ -147,7 +149,7 @@ int main()
                             domap(intersect, j, cur.Y, true);
                         else{
                             domap(Map, j, cur.Y, 0);
-                            PathSet.eb(j, cur.Y);
+                            //PathSet.eb(j, cur.Y);
                         }
                     }
                }else{
@@ -157,18 +159,18 @@ int main()
                             domap(intersect, j, cur.Y, true);
                         else{
                             domap(Map, j, cur.Y, 0);
-                            PathSet.eb(j, cur.Y);
+                            //PathSet.eb(j, cur.Y);
                         }
                     }
                }
             }
             cur = nxt;
         }
-        sort(al(PathSet), [](const pt A, pt B){
+        /*sort(al(PathSet), [](const pt A, pt B){
             if (A.X == B.X)
                 return A.Y < B.Y;
             return A.X < B.X;
-        });
+        });*/
         //PrintMap(Map);
         //PrintIntersect(intersect);
         /*
@@ -190,7 +192,7 @@ int main()
         vec<int> finish;
         deque<int> emer;
         queue<int> error;
-        vec<vec<vec<int>>> newAMap(301, vec<vec<int>>(301, vec<int>(4, -1)));
+        vec<vec<vec<int>>> newAMap(LEN, vec<vec<int>>(LEN, vec<int>(4, -1)));
         int done = 0;
         int t = 0;
         int CarlANS = 0;
@@ -200,10 +202,7 @@ int main()
             debug2(t+1);
             fill(al(moved), NOTYET);
             // reseting newAMap
-            for(pt& grid: PathSet){
-                for (int i = 0; i < 4; i++)
-                    do3map(newAMap, grid.X, grid.Y, i, -1);
-            }
+            
             // Carl move;
             pt &curl = Ants[0].cur_pos;
             if (!reached[0])
@@ -359,14 +358,14 @@ int main()
             //Antmap = newAMap;
             for (int i = 0; i < m; i++){
                 pt &cp = Ants[i].last_pos;
-                for(int j = 0; j < 4; j++){
-                        do3map(Antmap, cp.X, cp.Y, j, -1);
-                }
+                if(Ants[i].ldir >= 0)
+                do3map(Antmap, cp.X, cp.Y, Ants[i].ldir, -1);
             }
             for (int i = 0; i < m; i++){
                 pt &cp = Ants[i].cur_pos;
-                for(int j = 0; j < 4; j++){
-                    do3map(Antmap, cp.X, cp.Y, j, get3map(newAMap, cp.X, cp.Y, j));
+                if (Ants[i].dir >= 0){
+                    do3map(Antmap, cp.X, cp.Y, Ants[i].dir, get3map(newAMap, cp.X, cp.Y, Ants[i].dir));
+                    do3map(newAMap, cp.X, cp.Y, Ants[i].dir, -1);
                 }
             }
             //swap(Antmap, newAMap);
