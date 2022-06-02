@@ -262,53 +262,56 @@ int main()
                         }
                     }
                     pt & tcp = Ants[i].cur_pos;
-                    int tomove = i;
                     if(tcp == END){
                         reached[i] = true;
                         done++;
                         moved[i] = TO_END;
                         finish.eb(i);
                         //cout << "the END of " << i << endl;
-                        continue;
                     }
-                    if (getmap(intersect, tcp.X, tcp.Y) == true)
-                    {
-                        int another, dirID;
-                        tie(another, dirID) = antother(Antmap, tcp.X, tcp.Y, i);
-                        if(another != -1){
-                            /*
-                            if(Ants[another].plen > Ants[tomove].plen){
-                                tomove = another;
-                            }
-                            else if(Ants[another].plen == Ants[tomove].plen){
+                    else{
+                        int tomove = i;
+                        if (getmap(intersect, tcp.X, tcp.Y) == true)
+                        {
+                            int another = -1, dirID = -1;
+                            tie(another, dirID) = antother(Antmap, tcp.X, tcp.Y, i);
+                            if(another != -1){
+                                if(Ants[another].plen > Ants[tomove].plen){
+                                    tomove = another;
+                                }
+                                else if(Ants[another].plen == Ants[tomove].plen){
+                                    if(Ants[another].waitT > Ants[tomove].waitT)
+                                        tomove = another;
+                                }
+                                /*
                                 if(Ants[another].waitT > Ants[tomove].waitT)
                                     tomove = another;
+                                    */
+                                int notmove = (tomove == i ? another : i);
+                                dirID = (tomove == i ? dirID : Ants[i].dir);
+                                moved[notmove] = HOLD;
+                                Ants[notmove].last_pos = Ants[notmove].cur_pos;
+                                Ants[notmove].oldT = Ants[notmove].waitT;
+                                Ants[notmove].waitT++;
+                                do3map(newAMap, Ants[notmove].cur_pos.X, Ants[notmove].cur_pos.Y, dirID, notmove);
+                            //    cout << "not move  " << notmove << endl;
                             }
-                            */
-                            if(Ants[another].waitT > Ants[tomove].waitT)
-                                tomove = another;
-                            int notmove = (tomove == i ? another : i);
-                            dirID = (tomove == i ? dirID : Ants[i].dir);
-                            moved[notmove] = HOLD;
-                            Ants[notmove].waitT++;
-                            do3map(newAMap, Ants[notmove].cur_pos.X, Ants[notmove].cur_pos.Y, dirID, notmove);
-                        //    cout << "not move  " << notmove << endl;
                         }
+                        ant &mover = Ants[tomove];
+                        pt &lp = mover.last_pos, &cp = mover.cur_pos;
+                        lp = cp;
+                        int dirID = getmap(Map, cp.X, cp.Y);
+                        //dept(cp);
+                        cp = cp + dir[dirID];
+                        //dept(cp);
+                        moved[tomove] = MF;
+                        mover.plen++;
+                        mover.oldT = mover.waitT;
+                        mover.waitT = 0;
+                        mover.ldir = mover.dir;
+                        mover.dir = dirID;
+                        do3map(newAMap, cp.X, cp.Y, dirID, tomove);
                     }
-                    ant &mover = Ants[tomove];
-                    pt &lp = mover.last_pos, &cp = mover.cur_pos;
-                    lp = cp;
-                    int dirID = getmap(Map, cp.X, cp.Y);
-                    //dept(cp);
-                    cp = cp + dir[dirID];
-                    //dept(cp);
-                    moved[tomove] = 2;
-                    mover.plen++;
-                    mover.oldT = mover.waitT;
-                    mover.waitT = 0;
-                    mover.ldir = mover.dir;
-                    mover.dir = dirID;
-                    do3map(newAMap, cp.X, cp.Y, dirID, i);
                 }
             }
 
@@ -331,29 +334,25 @@ int main()
                 int err = error.front();
                 ant &errer = Ants[err];
                 error.pop();
-                pt &cp = errer.cur_pos;
-                /*
-                cout << "go " << err << " back from ";
-                dept(cp);
-                cout << " to ";
-                dept(errer.last_pos);
-                cout << endl;
-                */
-                cp = errer.last_pos;
+                //cout << "go " << err << " back from ";   dept(errer.cur_pos);           cout << " to ";              dept(errer.last_pos);              cout << endl;
+                errer.cur_pos = errer.last_pos;
+                errer.dir = errer.ldir;
                 errer.plen--;
-                if(cp == pt(0, 0)){
+                if(errer.cur_pos == pt(0, 0)){
                     inque[err] = true;
                     emer.emplace_front(err);
                     continue;
                 }
 
-                if(getmap(intersect, cp.X, cp.Y) == true)
-                    Ants[err].waitT = Ants[err].oldT;
-                int ori = get3map(newAMap, cp.X, cp.Y, Ants[err].ldir);
-                if(ori != -1)
+                if(getmap(intersect, errer.cur_pos.X, errer.cur_pos.Y) == true)
+                    errer.waitT = errer.oldT;
+                int ori = get3map(newAMap, errer.cur_pos.X, errer.cur_pos.Y, errer.dir);
+                if(ori != -1 && ori != err){
                     error.emplace(ori);
-                do3map(newAMap, cp.X, cp.Y, errer.ldir, err);
-                errer.dir = errer.ldir;
+                    //cout << " ant " << err << " step on ant " << ori << endl;
+                    //dept(Ants[ori].cur_pos);
+                }
+                do3map(newAMap,  errer.cur_pos.X, errer.cur_pos.Y, errer.dir, err);
             }
             //Antmap = newAMap;
             for (int i = 0; i < m; i++){
@@ -382,8 +381,11 @@ int main()
                 }
                 // cout << endl;
                 }
+            */
+            
+            /*
             cout << "time: " << t + 1 << endl;
-            for (int i = 0; i < min(20, m);i++){
+            for (int i = 0; i < min(25, m);i++){
                 cout << "Ant " << i << " at : " << Ants[i].cur_pos.X << ", " << Ants[i].cur_pos.Y  << "\n";
                 cout << Ants[i].plen << ", " << Ants[i].waitT << " dir " << Ants[i].dir<< endl;
             }
