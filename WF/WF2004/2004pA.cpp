@@ -276,6 +276,17 @@ int main()
                             int another = -1, dirID = -1;
                             tie(another, dirID) = antother(Antmap, tcp.X, tcp.Y, i);
                             if(another != -1){
+                                // Jeffery
+                                if(Ants[another].waitT > Ants[tomove].waitT){
+                                    tomove = another;
+                                }
+                                else if(Ants[another].waitT == Ants[tomove].waitT){
+                                    if(Ants[another].plen > Ants[tomove].plen)
+                                        tomove = another;
+                                }
+ 
+                                // 1. longest len, 2. waitT
+                                /*
                                 if(Ants[another].plen > Ants[tomove].plen){
                                     tomove = another;
                                 }
@@ -283,10 +294,14 @@ int main()
                                     if(Ants[another].waitT > Ants[tomove].waitT)
                                         tomove = another;
                                 }
+                                */
+                                // 0-------
+                                // 1. wait T
                                 /*
                                 if(Ants[another].waitT > Ants[tomove].waitT)
                                     tomove = another;
                                     */
+                                // ----
                                 int notmove = (tomove == i ? another : i);
                                 dirID = (tomove == i ? dirID : Ants[i].dir);
                                 moved[notmove] = HOLD;
