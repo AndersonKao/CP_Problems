@@ -15,8 +15,8 @@ template<typename T>
 using vec = vector<T>;
 using point = complex<double>;
 #define debugP(x) cout << #x << ": (" << x.X <<  ", " << x.Y << ")\n"
-#define debug(x) cout << #x << ": " << x << endl
-#define depii(x) cout << #x << ": (" << x.F <<  ", " << x.S << ")\n"
+#define debug(x) cout << #x << ": " << x << endl;
+#define depii(x) cout << #x << ": (" << x.F << ", " << x.S << ")\n"
 struct Linfo{
 	int order;
 	int unitLen;
