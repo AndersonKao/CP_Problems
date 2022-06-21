@@ -15,6 +15,7 @@ using namespace std;
 #define eb emplace_back
 #define X first
 #define Y second
+#define endl '\n'
 #define al(a) a.begin(), a.end()
 #define debug(x) cout << #x << ": " << x << endl;
 #define dept(x) cout << "(" << x.X << ", " << x.Y << ")\n";
