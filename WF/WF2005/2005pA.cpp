@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
+#define yccc cin.tie(0), ios_base::sync_with_stdio(false);
 const double eps = 1e-6;
 inline int fcmp(const double &a, const double &b){
     if(fabs(a - b) < eps)
@@ -98,6 +99,7 @@ struct Line
         // a little bit useless?
     }
     Line(const Point<T> x, const Point<T> y) : st(x), ed(y) {}
+    Line() : st(0.0, 0.0), ed(0.0, 0.0) {}
     template <class F>
     operator Line<F>() const
     {
@@ -189,38 +191,222 @@ using Polygon = vector<Point<F>>;
 template <typename T>
 using vec = vector<T>;
 using LineB = pair<Line<double>, bool>;
+#define debug(x) cout << #x << " >= " << x << endl;
+void getclosest(const vec<LineB>&puzzle, vec<Line<double>>& pclosest){
+    REP(i, puzzle.size()){
+        const Point<double> &st = puzzle[i].F.st;
+        const Point<double> &ed = puzzle[i].F.ed;
+        double stdis = numeric_limits<double>::max();
+        double eddis = numeric_limits<double>::max();
+        REP(j, puzzle.size())
+        {
+            if(j == i)
+                continue;
+            double dis = (st - puzzle[j].F.st).norm();
+            if(stdis > dis){
+                stdis = dis;
+                pclosest[i].st = puzzle[j].F.st;
+            }
+            dis = (st - puzzle[j].F.ed).norm();
+            if(stdis > dis){
+                stdis = dis;
+                pclosest[i].st = puzzle[j].F.ed;
+            }
+            dis = (ed - puzzle[j].F.st).norm();
+            if(eddis > dis){
+                eddis = dis;
+                pclosest[i].ed = puzzle[j].F.st;
+            }
+            dis = (ed - puzzle[j].F.ed).norm();
+            if(eddis > dis){
+                eddis = dis;
+                pclosest[i].ed = puzzle[j].F.ed;
+            }
+        }
+    }
+}
+const double dmax = numeric_limits<double>::max();
+const double dmin = numeric_limits<double>::min();
+Point<double> offsets;
+Point<double> panc, manc; // ancor
+double scale;
+Point<double> puzzleMax(dmin, dmin);
+Point<double> puzzleMin(dmax, dmax);
 
-int main(){
+inline Point<double> m2p(const Point<double>& pt){
+    return (pt - manc) * scale + manc + offsets;
+}
+inline Line<double> m2pL(const Line<double>& L){
+    return Line<double>(m2p(L.st), m2p(L.ed));
+}
+inline Point<double> p2m(const Point<double>& pt){
+    return (pt - panc) / scale + panc - offsets;
+}
+bool check(vec<LineB>& puzzle, vec<LineB>&image){
+    int n = puzzle.size(), m = image.size();
+    vec<LineB> panel;
+    for (int i = 0; i < m; i++) {
+        Line<double> tmp = m2pL(image[i].F);
+        Point<double> st, ed;
+        if(image[i].S == true){
+            if (fcmp(tmp.st.x, puzzleMax.x) <= 0 && fcmp(tmp.st.x, puzzleMin.x) >= 0)
+            {
+                st.x = ed.x = tmp.st.x;
+                ed.y = min(tmp.ed.y, puzzleMax.y);
+                st.y = max(tmp.st.y, puzzleMin.y);
+                if(fcmp(ed.y, puzzleMin.y) > 0 && fcmp(st.y, puzzleMax.y) < 0){
+                    panel.eb(Line<double>(st, ed), image[i].S);
+                }
+            }
+        }else{
+            if (fcmp(tmp.st.y, puzzleMax.y) <= 0 && fcmp(tmp.st.y, puzzleMin.y) >= 0)
+            {
+                st.y = ed.y = tmp.st.y;
+                ed.x = min(tmp.ed.x, puzzleMax.x);
+                st.x = max(tmp.st.x, puzzleMin.x);
+                if(fcmp(ed.x, puzzleMin.x) > 0 && fcmp(st.x, puzzleMax.x) < 0){
+                    panel.eb(Line<double>(st, ed), image[i].S);
+                }
+            }
+        }
+    }
+    sort(al(panel));
+    #ifdef Dpanel
+    cout << "panel\n";
+    cout << "with offset = " << offsets << " and scale = " << scale << endl;
+    cout << "pancor = " << panc << ", mancor: " << manc << endl;
+    for_each(al(panel), [](LineB &a)
+             { cout << "Line " << a.F << " is " << (a.S ? "vertical " : "horizontal") << endl; });
+    cout << "pppppppppaaaaaaaaaaaannnnnnnnnneeeeeeeeeeel\n";
+    #endif
+    if(panel.size() != puzzle.size())
+        return false;
+    for (int i = 0; i < puzzle.size(); i++){
+        Point<double>& st1 = panel[i].F.st;
+        Point<double>& st2 = puzzle[i].F.st;
+        Point<double>& ed1 = panel[i].F.ed;
+        Point<double>& ed2 = puzzle[i].F.ed;
+        if (fcmp(st1.x, st2.x) != 0 || fcmp(st1.y, st1.y) != 0 || fcmp(ed1.x, ed2.x) != 0 || fcmp(ed1.y, ed2.y) != 0)
+            return false;
+    }
+    return true;
+}
 
+int main()
+{
+
+    yccc;
     int n, m;
-    while ( cin >> n >> m ){
+    int caseN = 1;
+    while (cin >> n >> m)
+    {
         if(n == 0 && m == 0)
             break;
         vec<pair<Line<double>, bool>> puzzle, image; // vertical = true
-        REP(i, n){
+        vec<Line<double>> pclosest(n), iclosest(m);
+        puzzleMax = Point<double>(dmin, dmin);
+        puzzleMin= Point<double> (dmax, dmax);
+        REP(i, n)
+        {
             Point<double> st, ed;
             cin >> st >> ed;
-            if(st.x == ed.x)
-                puzzle.eb(st, ed, true);
+            puzzleMax.x = max(puzzleMax.x, st.x);
+            puzzleMax.x = max(puzzleMax.x, ed.x);
+            puzzleMax.y = max(puzzleMax.y, st.y);
+            puzzleMax.y = max(puzzleMax.y, ed.y);
+            puzzleMin.x = min(puzzleMin.x, st.x);
+            puzzleMin.x = min(puzzleMin.x, ed.x);
+            puzzleMin.y = min(puzzleMin.y, st.y);
+            puzzleMin.y = min(puzzleMin.y, ed.y);
+            if (st.x == ed.x)
+                puzzle.eb(Line<double>(min(st, ed), max(st, ed)), true);
             else
-                puzzle.eb(st, ed, false);
-            
+                puzzle.eb(Line<double>(min(st, ed), max(st, ed)), false);
         }
         REP(i, m){
             Point<double> st, ed;
             cin >> st >> ed;
             if(st.x == ed.x)
-                image.eb(st, ed, true);
+                image.eb(Line<double>(min(st, ed), max(st, ed)), true);
             else
-                image.eb(st, ed, false);
+                image.eb(Line<double>(min(st, ed), max(st, ed)), false);
         }
         sort(al(puzzle));
         sort(al(image));
+        if(n == 1){
+        cout << "Case " << caseN++ << ": " << "valid puzzle" << endl << endl;
+            continue;
+        }
+        int pVerI = 0, iVerI = 0;
+        for (pVerI = 0; pVerI < n; pVerI++){
+            if(puzzle[pVerI].S == true)
+                break;
+        }
+        for (iVerI= 0; iVerI< m; iVerI++) {
+            if(image[iVerI].S == true)
+                break;
+        }
+
+        #ifdef Dinput
+        cout << "puzzle:\n";
+        debug(pVerI);
         for_each(al(puzzle), [](LineB &a)
                  { cout << "Line " << a.F << " is " << (a.S ? "vertical " : "horizontal") << endl; });
+        cout << "image:\n";
+        debug(iVerI);
         for_each(al(image), [](LineB &a)
                  { cout << "Line " << a.F << " is " << (a.S ? "vertical " : "horizontal") << endl; });
+        #endif
+        getclosest(puzzle, pclosest);
+        getclosest(image, iclosest);
 
+        bool totalpick = false;
+        bool ans = false;
+        REP(pi, n)
+        {
+            panc = puzzle[pi].F.st;
+            double pdy;
+            int eI = 0;
+            bool picked = false;
+            for (eI = 0; eI < n; eI++)
+            {
+                if(pi == eI)
+                    continue;
+                if((puzzle[eI].S == true && panc.x == puzzle[eI].F.st.x) || (puzzle[eI].S == true && panc.y == puzzle[eI].F.st.y ))
+                    continue;
+                totalpick = picked = true;
+                pdy = sqrt(puzzle[eI].F.disP2Line(panc));
+                break;
+            }
+            if(!picked)
+                continue;
+
+            REP(mi, m){
+                if(puzzle[pi].S != image[mi].S)
+                    continue;
+                manc = image[mi].F.st;
+                offsets = panc - manc;
+
+                REP(meI, m){
+                    if(image[meI].S != puzzle[eI].S)
+                        continue;
+                    if((image[meI].S == true && manc.x == image[meI].F.st.x) || (image[meI].S == true && manc.y == image[meI].F.st.y ))
+                        continue;
+
+                    double mdy = sqrt(image[meI].F.disP2Line(manc));
+                    scale = pdy / mdy;
+
+                    ans = check(puzzle, image);
+                    if(ans)
+                        break;
+                }
+                if(ans)
+                    break;
+            }
+            if(ans)
+                break;
+        }
+        cout << "Case " << caseN++ << ": " << (ans ? "valid puzzle" : "impossible") << endl << endl;
     }
         return 0;
 }
