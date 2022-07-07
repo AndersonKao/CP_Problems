@@ -30,6 +30,7 @@ int main(){
             cin >> m[i] >> d[i];
         }
         cin >> m[n - 1];
+
         pre[0] = 0;
         for (int i = 1; i < n; i++)
             pre[i] = pre[i - 1] + d[i - 1];

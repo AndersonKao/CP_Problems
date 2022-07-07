@@ -33,7 +33,7 @@ void getPerfect(){
         */
     }
 }
-inline int diffen(const vec<int>&A, const vec<int>&B){
+int diffen(const vec<int>&A, const vec<int>&B){
     int ans = 0;
     REP(i, 52)
     {
@@ -45,7 +45,6 @@ inline int diffen(const vec<int>&A, const vec<int>&B){
 int getNofS(vec<int>& A){
     for (int i = 0; i < 11; i++){
         int diff = diffen(A, Perf[i]);
-//        debug(diff);
         if (diffen(A, Perf[i]) <= 21)
         {
             return i;
