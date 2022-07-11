@@ -128,6 +128,7 @@ double getXonSegment(const segment& seg, int liney){
 }
 
 map<int, vec<segment>> getSegments(){
+    // O(N * N * logN)
     map<int, vec<segment>> ret;
     for(int i = 0; i < (int)pnts.size(); i++){
         int j = (i + 1 == (int)pnts.size() ? 0 : i + 1);
