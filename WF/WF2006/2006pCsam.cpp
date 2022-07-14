@@ -8,6 +8,7 @@
 #include<cstring>
 #include<cmath>
 #include<iostream>
+#include<iomanip>
 #include<cstdio>
 #include<cstdlib>
 using namespace std;
@@ -15,6 +16,19 @@ using namespace std;
 #define eps (1e-8)
 #define maxn (310)
 int J,R,tot,con[maxn][maxn],T; double val[maxn][maxn];
+void pG(){
+	cout << "polynomials now ---------------:\n";
+	for (int i = 0; i < 3 * J; i++)
+	{
+		cout << setw(3) << i << ": ";
+		for (int j = 0; j <= R+1; j++){
+			cout << setw(4) << val[i][j] << " ";
+		}
+		cout << endl;
+	}
+}
+
+
 struct Node
 {
 	double x,y,z;
@@ -25,7 +39,8 @@ struct Node
 inline int guass()
 {
 	int now = 0;
-	for (int i = 1,j;i <= R;++i)
+	pG();
+	for (int i = 1, j; i <= R; ++i)
 	{
 		for (j = now+1;j <= tot;++j) if (fabs(val[j][i]) > eps) break;
 		if (j == tot+1) continue; ++now;
@@ -35,15 +50,20 @@ inline int guass()
 			if (j == now) continue; double t = val[j][i]/val[now][i];
 			for (int k = 1;k <= R+1;++k) val[j][k] -= t*val[now][k];
 		}
+		pG();
 	}
 	for (int i = now+1;i <= tot;++i) if (fabs(val[i][R+1]) > eps) return 0;
-	if (now < tot) return 1; return 2;
-}
+	cout << "now: " << now << endl;
+	cout << "tot: " << tot<< endl;
 
+	if (now < tot)
+		return 1;
+	return 2;
+}
 int main()
 {
-	freopen("1050.in","r",stdin);
-	freopen("1050.out","w",stdout);
+	freopen("pC.in","r",stdin);
+	freopen("pCsam.out","w",stdout);
 	while (++T)
 	{
 		tot = 0; memset(val,0,sizeof(val)); memset(con,0,sizeof(con));
