@@ -1,9 +1,11 @@
 #include<bits/stdc++.h>
 using namespace std;
 #define debug(x) cout << #x << ":= " << x << endl;
-const double eps = 1e-8;
-inline int fcmp(const double &a, const double &b){
-    if(fabs(a - b) < eps)
+const double eps = 1e-6;
+using ll = long long;
+inline int fcmp(const double &a, const double &b)
+{
+	if(fabs(a - b) < eps)
         return 0;
     return ((a - b > 0.0) * 2) - 1;
 }
@@ -135,7 +137,7 @@ struct Line
 
     bool isSegProperIntersection(const Line l) const
     {
-        return l.ori(st) * l.ori(ed) < 0 and ori(l.st) * ori(l.ed) < 0;
+        return fcmp(l.ori(st) * l.ori(ed), 0.0) < 0 and fcmp(ori(l.st) * ori(l.ed), 0.0) < 0;
     }
     bool isSegIntersection(const Line l)const{
         Line<Real> h = *this;
@@ -189,20 +191,30 @@ ostream &operator<<(ostream &os, const Line<F> &l)
     return os << "(" << l.st.x << ", " << l.st.y << ") to (" << l.ed.x << ", " << l.ed.y << ")";
 }
 struct Point3D{
-	double x, y, z;
+	ll x, y, z;
 	Point3D():x(0), y(0), z(0){}
-	Point3D(double x, double y, double z):x(x), y(y), z(z){}
+	Point3D(int x, int y, int z):x(x), y(y), z(z){}
 	Point3D operator-(Point3D& a){
 		return Point3D(x - a.x, y - a.y, z - a.z);
 	}
+	Point3D operator+(Point3D& a){
+		return Point3D(x + a.x, y + a.y, z + a.z);
+	}
 	Point3D operator^(Point3D& v2){
-		double a = y * v2.z - v2.y * z;
-		double b = z * v2.x - v2.z * x;
-		double c = x * v2.y - v2.x * y;
+		ll a = y * v2.z - v2.y * z;
+		ll b = z * v2.x - v2.z * x;
+		ll c = x * v2.y - v2.x * y;
 		return Point3D(a, b, c);
 	}
+	friend ostream& operator<<(ostream&os, Point3D&a);
 };
-struct Plane3D{
+ostream& operator<<(ostream&os, Point3D&a){
+	return os << "(" << a.x << ", " << a.y << ", " << a.z << ")";
+}
+vector<Point3D> pts3d;
+vector<vector<int>> triangles;
+struct Plane3D
+{
 	Point3D v1, v2;
 	Point3D st;
 	Plane3D(){}
@@ -212,16 +224,39 @@ struct Plane3D{
 		v2 = c - a;
 	}
 	double getz(double x, double y){
-			
-		double t1 = (x - y * v2.x / v2.y)/(v1.x - v1.y * v2.x/ v2.y);
-		double t2 = (x - y * v1.x / v1.y)/(v2.x - v2.y * v1.x/ v1.y);
+		x -= st.x;	
+		y -= st.y;
+		double t1 = (x * v2.y - y * v2.x) / (v1.x * v2.y - v1.y * v2.x);
+		double t2 = (x * v1.y - y * v1.x) / (v2.x * v1.y - v2.y * v1.x);
+		double t12 = (y * v2.x - x * v2.y) / (v2.x * v1.y - v1.x * v2.y);
+		double t22 = (y * v1.x - x * v1.y) / (v1.x * v2.y - v2.x * v1.y);
+		/*
+				if(fcmp(t1 ,t12) != 0){
+					cout << "gentaz\n";
+					cout << v1 << ", " << v2 << endl;
+					cout << x << ", " << y << endl;
+					debug(t1);
+					debug(t12);
+				}
+				if(fcmp(t2 ,t22) != 0){
+					cout << "gentaz\n";
+					cout << v1 << ", " << v2 << endl;
+					cout << x << ", " << y << endl;
+					debug(t2);
+					debug(t22);
+				}
+		*/
+		if(isnan(t1))
+			t1 = t12;
+		if(isnan(t2))
+			t2 = t22;
 		return st.z + v1.z * t1 + v2.z * t2;
 	}
 	double get2Area(){
 		// get 2 * Area
-		double a = v1.y * v2.z - v2.y * v1.z;
-		double b = v1.z * v2.x - v2.z * v1.x;
-		double c = v1.x * v2.y - v2.x * v1.y;
+		ll a = (ll)v1.y * v2.z - v1.z * v2.y;
+		ll b = (ll)v1.z * v2.x - v1.x * v2.z;
+		ll c = (ll)v1.x * v2.y - v1.y * v2.x;
 		return sqrt(a * a + b * b + c * c);
 	}
 };
@@ -253,12 +288,12 @@ void fillIntersection(vec<double>& onlyX, vec<vec<int>>& triangles, vec<Point3D>
 					int tjf, tjt;
 					tjf = triangles[tj][tjpi];	
 					tjt = triangles[tj][nti(tjpi,3)];
-					if(tif == tjf && tit == tjt)
+					if((tif == tjf && tit == tjt) || (tif == tjt && tit == tjf))
 						continue;		
 					Line<double> L2(pts3d[tjf].x, pts3d[tjf].y, pts3d[tjt].x, pts3d[tjt].y);
 					if(L1.isSegProperIntersection(L2)){
 						Point<double> inter= L1.getIntersection(L2);
-						onlyX.eb(inter.x);	
+						onlyX.eb(inter.x);
 					}
 				}
 			}			
@@ -267,98 +302,165 @@ void fillIntersection(vec<double>& onlyX, vec<vec<int>>& triangles, vec<Point3D>
 }
 vec<Plane3D> triplanes;
 Point<double> heapify_parameter;
-auto heapify = [](int a, int b){
-/*
-	cout << heapify_parameter << endl;
-	debug(a);
-	debug(b);
-	debug(triplanes.size());
-*/
+int heapstatus;
+auto heapify = [](int a, int b)
+{
 	double z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y);
 	double z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y);
+	if (fcmp(z1, z2) == 0)
+	{
+		double z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y - 1);
+		double z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y - 1);
+		return fcmp(z1, z2) < 0;
+	}
 	return fcmp(z1, z2) < 0;
+	if(z1 - z2 > 0-eps) return false;
+	else return true;
 };
 double TrapeziumArea(const Line<double>& L1, const Line<double>& L2){
 	double h = abs(L1.ed.x - L1.st.x);
 	if(fcmp(L1.st.y, L2.st.y) == 0 && fcmp(L1.ed.y, L2.ed.y) == 0)
 		return 0.0;
-	return (abs(L1.st.y - L2.st.y) + abs(L1.ed.y - L2.ed.y)) * h /2.0;
+	return (abs(L1.st.y - L2.st.y) + abs(L1.ed.y - L2.ed.y)) * h;
 }
-double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate){
+double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, int round){
 	double res = 0.0;
-	priority_queue<int, vector<int>, decltype(heapify)> pq(heapify);
+	double tmp;
+//	priority_queue<int, vector<int>, decltype(heapify)> pq(heapify);
+	vec<int> pq;
+	make_heap(pq.begin(), pq.end(), heapify);
 	Line<double> L1;
-	vec<int> inpq(Tn);
+	vec<int> inpq(Tn, false);
 	for(auto&e: segments){
 		int id, inout;
 		Line<double> L;
 		tie(L, id, inout) = e;
-		#ifdef Dslice
-		cout << "id: " << id << " inout: " << inout << endl;
-		cout << L << endl;
-		#endif
 		heapify_parameter = (L.st + L.ed) / 2.0;
-		if(inout == 0){ // in
-			if(pq.empty()){
-				pq.emplace(id);
+		#ifdef Dslice	
+		if(round == 70){
+		
+		cout << L;
+		cout << ", " << id << ", " << inout << endl;
+		cout << heapify_parameter << endl;
+		if(pq.empty() == false){
+			cout << pq.front() << endl;
+			vec<int> &pi = triangles[pq.front()];
+			REP(j, 3)
+			{
+				cout << "(" << pts3d[pi[j]].x << ", " << pts3d[pi[j]].y <<  ", " << pts3d[pi[j]].z << ") ";
+			}
+			cout << endl;
+			/*
+			double z1 = triplanes[40].getz(heapify_parameter.x, heapify_parameter.y);
+			double z2 = triplanes[25].getz(heapify_parameter.x, heapify_parameter.y);
+			cout << "4024: " << z1 << ", " << z2 << endl;
+			cout << "unqueue:\n";
+			*/
+			vector<int> myq(pq.size());
+			myq = pq;
+			//			copy(&pq.b(), &pq.top() + pq.size(), myq.begin());
+			/*
+			while(pq.size())
+				pq.pop();
+				*/
+			for(int&e: myq){
+			//	pq.emplace(e);
+				if (inpq[e])
+					cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
+			}
+			/*
+			copy(&pq.top(), &pq.top() + pq.size(), myq.begin());
+			cout << "------\n";
+			for (int &e : myq)
+			{
+				if (inpq[e])
+					cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
+			}
+			*/
+			cout << id << ": " << triplanes[id].getz(heapify_parameter.x, heapify_parameter.y) << endl;
+			cout << "heapfiy " << heapify(id, pq.front()) << endl;
+			cout << endl;
+			}
+		}
+		#endif
+		cout << fixed << setprecision(7);
+		if (inout == 0)
+		{ // in
+			inpq[id] = true;
+			if (pq.empty())
+			{
+//				pq.emplace(id);
+				pq.push_back(id);
+				push_heap(al(pq), heapify);
 				L1 = L;
-				inpq[id] = true;
 			}
 			else{
-				int curtop = pq.top();
-				pq.emplace(id);
-				inpq[id] = true;
-				if(curtop != pq.top()){
+//				int curtop = pq.top();
+//				pq.emplace(id);
+				int curtop = pq.front();
+				pq.push_back(id);
+				push_heap(al(pq), heapify);
+				//	if(curtop != pq.top()){ // pq.top() become id
+				res += abs(TrapeziumArea(L1, L) * rate[curtop]);				
 					#ifdef DArea	
-					if(isnan(TrapeziumArea(L1, L)))	{
-						cout << L1 << endl;
-						cout << L << endl;
+					if(round == 70){
+						cout << "counted " << curtop << "\n from " << L1 << "\n to " << L << "\n";
+						debug(TrapeziumArea(L1, L) * rate[curtop]/ 2.0);
 					}
 					#endif	
-					cout << "counted " << curtop << " from " << L1 << " to " << L << "\n";	
-					if(fcmp(TrapeziumArea(L1, L) * rate[curtop], 0.0) != 0)
-						res += (TrapeziumArea(L1, L) * rate[curtop]);				
-					debug(TrapeziumArea(L1, L) * rate[curtop]);
 					L1 = L;
-				}
+				//}
 			}
 		}
 		else if(inout == 1){
 			if(pq.empty()){
-			//	cout << "Error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+				cout << "Error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 				continue;
 			}
 			inpq[id] = false;
-			int curtop = pq.top();
-			if(curtop == id){
+//			int curtop = pq.top();
+			int curtop = pq.front();
+			// if(curtop == id){
+				res += abs(TrapeziumArea(L1, L) * rate[curtop]);
 				#ifdef DArea	
-				if(isnan(TrapeziumArea(L1, L)))	{
-					cout << L1 << endl;
-					cout << L << endl;
+				if(round == 70){
+
+				cout << "counted " << curtop << "\n from " << L1 << "\n to " << L << "\n";	
+				debug(TrapeziumArea(L1, L) * rate[curtop] / 2.0);
 				}
 				#endif
-				cout << "counted " << curtop << " from " << L1 << " to " << L << "\n";	
-				if(fcmp(TrapeziumArea(L1, L) * rate[curtop], 0.0) != 0)
-					res += TrapeziumArea(L1, L) * rate[curtop];
-				debug(TrapeziumArea(L1, L) * rate[curtop]);
 				L1 = L;
-			}
-			while(pq.empty() == false && inpq[pq.top()] == false){
-				pq.pop();
+			//}
+			while(pq.empty() == false && inpq[pq.front()] == false){
+				pop_heap(al(pq), heapify);
+				pq.pop_back();
+				//				pq.pop();
 			}	
 		}
 		else{
 			cout << "WTFFFFFFFFFFFF\n";
 		}
+		if(round == 70){
+
+			cout << "after \n";
+			vec<int> myq = pq;
+			for (int &e : myq)
+			{
+				//	pq.emplace(e);
+					if (inpq[e])
+						cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
+			}
+			cout << "end after----------\n";
+		}
 	}	
 	return res;
 }
 double getY(const Line<int>& L, double x){
-	double offset = x - L.st.x;
 	if(fcmp(x, L.st.x) == 0)
 		return L.st.y;
 	else if(fcmp(x, L.ed.x) == 0)
 		return L.ed.y;
+	double offset = x - L.st.x;
 	return L.st.y + L.vec().y * (offset / L.vec().x);
 }
 void getSegments(vec<tuple<Line<double>, int, int>>&segments, vec<Point<int>>&pts, vec<vec<int>>& triangles, double xL, double xR){
@@ -367,7 +469,7 @@ void getSegments(vec<tuple<Line<double>, int, int>>&segments, vec<Point<int>>&pt
 	debug(xR);	
 	#endif
 	for(int i = 0; i < Tn; i++){
-		int visited = 0;
+//		int visited = 0;
 		vec<Line<double>> Lines;
 		REP(j, 3){
 			int pi = triangles[i][j];	
@@ -377,7 +479,7 @@ void getSegments(vec<tuple<Line<double>, int, int>>&segments, vec<Point<int>>&pt
 			}
 			Line<int> L1(pts[pi], pts[pj]);	
 			if(pts[pi].x > pts[pj].x){
-				L1.st = pts[pj], L1.ed = pts[pi];	
+				swap(L1.st, L1.ed);	
 			}	
 //			cout << L1  << ":\n";
 			if(fcmp(xL, L1.st.x) >= 0 && fcmp(xR, L1.ed.x) <= 0){
@@ -405,14 +507,27 @@ void getSegments(vec<tuple<Line<double>, int, int>>&segments, vec<Point<int>>&pt
 			for(int inout = 0; inout < 2; inout++)
 				segments.eb(Lines[inout], i, inout);	
 		}
+		else if(Lines.size() == 1)	
+			cout << "Whatriangle?\n";
 	}
 	auto cmp = [](tuple<Line<double>, int ,int> &a, tuple<Line<double>, int ,int> &b){
 		double ya = (get<0>(a).st.y + get<0>(a).ed.y) / 2.0; 
 		double yb = (get<0>(b).st.y + get<0>(b).ed.y) / 2.0; 
-		return fcmp(ya, yb) > 0;	
+		if(fcmp(ya, yb) != 0)
+			return fcmp(ya, yb) > 0;	
+		return get<2>(a) > get<2>(b);
 	};
 	sort(al(segments), cmp);
+	#ifdef DSeg
+		for(auto&e: segments){
+			Line<double> L;
+			int id, inout;
+			tie(L, id, inout) = e;
+			cout << L << ", " << id << ", " << inout << endl;
+		}
+	#endif
 }
+
 auto onlyXcmp= [](double&a, double &b){
 	return fcmp(a, b) <0 ;
 };
@@ -421,39 +536,65 @@ int main(){
 	while(cin >> Vn >> Tn){
 		if(Vn == 0 && Tn == 0)
 			break;
-		vec<Point3D> pts3d(Vn);	
+		if(caseN == 12)
+			cout << Vn << " " << Tn << endl;
+//		vec<Point3D> pts3d(Vn);
+		pts3d.resize(Vn);
 		triplanes.clear();
-		REP(i, Vn){
+		triangles.clear();
+		REP(i, Vn)
+		{
 			cin >> pts3d[i].x >> pts3d[i].y >> pts3d[i].z;
+			if(caseN == 12)
+				cout<<  pts3d[i].x << " " << pts3d[i].y << " " << pts3d[i].z << endl;
 		}
 		vec<Point<int>> pts;	
 		REP(i, Vn){
 			pts.eb(pts3d[i].x, pts3d[i].y)	;
 		}	
-		vec<vec<int>> triangles;
 		vector<double> onlyX;
 		vec<double> rate;
 		REP(i, Tn){
 			vec<int> pi(3);
 			REP(j, 3){
 				cin >> pi[j];
+				if(caseN == 12)
+					cout << pi[j] << " ";
 				pi[j]--;
 			}
-			double Area2D = (pts[pi[1]] - pts[pi[0]]) ^ (pts[pi[2]] - pts[pi[0]]);
+			if(caseN == 12)
+				cout << endl;
+			int Area2D = (pts[pi[1]] - pts[pi[0]]) ^ (pts[pi[2]] - pts[pi[0]]);
 			int curi = triangles.size();
-			if(fcmp(0.0, Area2D) == 0)
-				continue;	
-			cout << i << ": ";
-			REP(j, 3){
-				onlyX.eb((double)pts3d[pi[j]].x);
-				cout << "(" << pts3d[pi[j]].x << ", " << pts3d[pi[j]].y << "), ";
+			if(Area2D == 0){
+//				cout << "discard " << i << endl;
+				continue;
 			}
-			cout << endl;
+			REP(j, 3)
+				onlyX.eb((double)pts3d[pi[j]].x);
+			#ifdef DonlyX
+				cout << i << ": ";
+				REP(j, 3){
+					cout << "(" << pts3d[pi[j]].x << ", " << pts3d[pi[j]].y << "), ";
+				}
+				cout << endl;
+			#endif
 			triangles.eb(pi);
 			triplanes.eb(pts3d[pi[0]], pts3d[pi[1]], pts3d[pi[2]]);
-			rate.eb(abs(triplanes[curi].get2Area() / Area2D));
+			rate.eb((triplanes[curi].get2Area() / Area2D));
 		}
 		Tn = triplanes.size();
+		/*
+		REP(i, Tn){
+			if(i == 40 || i == 25){
+				cout << i << ": ";
+				REP(j, 3){
+					cout << "(" << pts3d[triangles[i][j]].x << ", " << pts3d[triangles[i][j]].y << ", " << pts3d[triangles[i][j]].z << "), ";
+				}
+				cout << endl;
+			}
+		}
+		*/
 		// get all intersections' x value	
 		fillIntersection(onlyX, triangles, pts3d); 
 		sort(al(onlyX), onlyXcmp);
@@ -461,7 +602,7 @@ int main(){
 		#ifdef DonlyX	
 		cout << "onlyX:";
 		for(double&x: onlyX){
-			cout << x << " " ;
+			cout << x << " \n" ;
 		}
 		cout << endl;
 		#endif	
@@ -471,12 +612,14 @@ int main(){
 			cout << "cutting:\n";
 			#endif
 			vec<tuple<Line<double>, int, int>> segments; // Line, tri id, in(0)/out(1)
-			getSegments(segments, pts, triangles, onlyX[i], onlyX[i+1]);	
-			ans += doslice(segments, rate);
-			//debug(ans);
-		}	
-		
-		cout << "Case " << caseN++ << ": " <<fixed << setprecision(2) << ans << endl;
+			getSegments(segments, pts, triangles, onlyX[i], onlyX[i+1]);
+			double ans2 = ans;
+			ans += doslice(segments, rate, i);
+			cout << fixed << setprecision(10);
+			cout << (ans - ans2) / 2.0 << endl;
+		}
+
+		cout << "Case " << caseN++ << ": " <<fixed << setprecision(2) << ans /2.0<< endl;
 		cout << endl;
 		
 	}
