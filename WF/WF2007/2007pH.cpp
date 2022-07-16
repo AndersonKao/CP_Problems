@@ -305,17 +305,23 @@ Point<double> heapify_parameter;
 int heapstatus;
 auto myheapify = [](int a, int b)
 {
+	if(a == b)
+		return false;
 	double z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y);
 	double z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y);
 	if (fcmp(z1, z2) == 0)
 	{
-		double z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y - 1);
-		double z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y - 1);
+		if(heapstatus == 0){ //insert
+			z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y - 0.0001);
+			z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y - 0.0001);
+		}
+		else { //erase
+			z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y + 0.0001);
+			z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y + 0.0001);
+		}
 		return fcmp(z1, z2) > 0;
 	}
 	return fcmp(z1, z2) > 0;
-	//	if(z1 - z2 > 0-eps) return false;
-	//	else return true;
 };
 double TrapeziumArea(const Line<double>& L1, const Line<double>& L2){
 	double h = abs(L1.ed.x - L1.st.x);
@@ -323,6 +329,7 @@ double TrapeziumArea(const Line<double>& L1, const Line<double>& L2){
 		return 0.0;
 	return (abs(L1.st.y - L2.st.y) + abs(L1.ed.y - L2.ed.y)) * h;
 }
+const int roundT =72;
 double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, int round){
 	double res = 0.0;
 	double tmp;
@@ -340,76 +347,34 @@ double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, 
 		tie(L, id, inout) = e;
 		heapify_parameter = (L.st + L.ed) / 2.0;
 		#ifdef Dslice	
-		if(round == 70){
-		
-		cout << L;
-		cout << ", " << id << ", " << inout << endl;
-		cout << heapify_parameter << endl;
-		if(pq.empty() == false){
-//			cout << pq.front() << endl;
-   /*
-			vec<int> &pi = triangles[pq.front()];
-			REP(j, 3)
+		if(round == 72){
+			cout << L;
+			cout << ", " << id << ", " << inout << endl;
+			cout << heapify_parameter << endl;
+			cout << "now set" << endl;
+			for (const int &e : pq)
 			{
-				cout << "(" << pts3d[pi[j]].x << ", " << pts3d[pi[j]].y <<  ", " << pts3d[pi[j]].z << ") ";
+				cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
 			}
-			cout << endl;
-			*/
-			/*
-			double z1 = triplanes[40].getz(heapify_parameter.x, heapify_parameter.y);
-			double z2 = triplanes[25].getz(heapify_parameter.x, heapify_parameter.y);
-			cout << "4024: " << z1 << ", " << z2 << endl;
-			cout << "unqueue:\n";
-			*/
-			//			copy(&pq.b(), &pq.top() + pq.size(), myq.begin());
-			/*
-			while(pq.size())
-				pq.pop();
-				*/
-			for(const int&e: pq){
-			//	pq.emplace(e);
-				if (inpq[e])
-					cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
-			}
-			/*
-			copy(&pq.top(), &pq.top() + pq.size(), myq.begin());
-			cout << "------\n";
-			for (int &e : myq)
-			{
-				if (inpq[e])
-					cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
-			}
-			*/
 			cout << id << ": " << triplanes[id].getz(heapify_parameter.x, heapify_parameter.y) << endl;
 			cout << "heapfiy " << myheapify(id, *pq.begin()) << endl;
-			cout << endl;
-			}
 		}
 		#endif
-		cout << fixed << setprecision(7);
+		heapstatus = inout;
 		if (inout == 0)
 		{ // in
 			inpq[id] = true;
 			if (pq.empty())
 			{
-//				pq.emplace(id);
 				pq.insert(id);
-				#ifdef USEHEAP
-				pq.push(id);
-				push_heap(al(pq), myheapify);
-				#endif
 				L1 = L;
 			}
 			else{
-//				int curtop = pq.top();
-//				pq.emplace(id);
 				int curtop = *pq.begin();
 				pq.insert(id);
-//				push_heap(al(pq), myheapify);
-				//	if(curtop != pq.top()){ // pq.top() become id
 				res += abs(TrapeziumArea(L1, L) * rate[curtop]);				
 					#ifdef DArea	
-					if(round == 70){
+					if(round == roundT){
 						cout << "counted " << curtop << "\n from " << L1 << "\n to " << L << "\n";
 						debug(TrapeziumArea(L1, L) * rate[curtop]/ 2.0);
 					}
@@ -419,51 +384,34 @@ double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, 
 			}
 		}
 		else if(inout == 1){
-			if(pq.empty()){
-			//	cout << "Error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-				continue;
-			}
 			inpq[id] = false;
-//			int curtop = pq.top();
-//			int curtop = pq.front();
 			int curtop = *pq.begin();
-			// if(curtop == id){
 				res += abs(TrapeziumArea(L1, L) * rate[curtop]);
 				#ifdef DArea	
-				if(round == 70){
+				if(round == roundT){
 
 				cout << "counted " << curtop << "\n from " << L1 << "\n to " << L << "\n";	
 				debug(TrapeziumArea(L1, L) * rate[curtop] / 2.0);
 				}
 				#endif
 				L1 = L;
-				pq.erase(id);
-				//}
-				/*
-				while(pq.empty() == false && inpq[*pq.begin()] == false){
-					#ifdef USEHEAP
-					pop_heap(al(pq), myheapify);
-					pq.pop_back();
-					#endif
-					pq.erase(pq.begin());
-					//				pq.pop();
-				}
-				*/
+			pq.erase(id);
+			//	while (pq.size() && inpq[*pq.begin()] == false)
+			//		pq.erase(pq.begin());
 		}
 		else{
 			cout << "WTFFFFFFFFFFFF\n";
 		}
 		#ifdef Dround
-		if(round == 70){
+		if(round == roundT){
 
 			cout << "after \n";
 			for (const int &e : pq)
 			{
-				//	pq.emplace(e);
-					if (inpq[e])
-						cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
+				cout << e << " " << triplanes[e].getz(heapify_parameter.x, heapify_parameter.y) << endl;
 			}
 			cout << "end after----------\n";
+			cout << endl;
 		}
 		#endif
 	}	

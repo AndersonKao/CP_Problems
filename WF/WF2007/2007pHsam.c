@@ -213,9 +213,10 @@ void ShowTriangle()
         ShowLine(tArray[i].lines[2]);
     }
 }
+const int roundT = 72;
 double CalculateOriginalArea(Segment s1, Segment s2, double height, int triN, int round)
 {
-    if(round == 70){
+    if(round == roundT){
         printf("      ---- Valid Area:\n");
         printf("      height: %2.2lf, Triangle: %d\n      ", height, triN);
         ShowLine(s1);
@@ -425,7 +426,7 @@ int main()
                 FindLine2(slices[i].v[j], &tmps2);
                 double res = CalculateOriginalArea(tmps1, tmps2, slices[i+1].x - slices[i].x, tmpTop, i);
                 area += res;
-                if(i == 70)
+                if(i == roundT)
                     printf("res: %.7f\n", res);
                 FindLine2(slices[i].v[j], &tmps1);
                 valid[slices[i].v[j].triangle] = !valid[slices[i].v[j].triangle];
