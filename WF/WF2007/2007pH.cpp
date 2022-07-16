@@ -312,12 +312,12 @@ auto myheapify = [](int a, int b)
 	if (fcmp(z1, z2) == 0)
 	{
 		if(heapstatus == 0){ //insert
-			z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y - 0.0001);
-			z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y - 0.0001);
+			z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y - 1);
+			z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y - 1);
 		}
 		else { //erase
-			z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y + 0.0001);
-			z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y + 0.0001);
+			z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y + 1);
+			z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y + 1);
 		}
 		return fcmp(z1, z2) > 0;
 	}
