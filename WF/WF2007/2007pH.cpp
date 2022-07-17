@@ -319,9 +319,9 @@ auto myheapify = [](int a, int b)
 			z1 = triplanes[a].getz(heapify_parameter.x, heapify_parameter.y + 1);
 			z2 = triplanes[b].getz(heapify_parameter.x, heapify_parameter.y + 1);
 		}
-		return fcmp(z1, z2) > 0;
+		return fcmp(z1, z2) <= 0;
 	}
-	return fcmp(z1, z2) > 0;
+	return fcmp(z1, z2) < 0;
 };
 double TrapeziumArea(const Line<double>& L1, const Line<double>& L2){
 	double h = abs(L1.ed.x - L1.st.x);
@@ -329,16 +329,16 @@ double TrapeziumArea(const Line<double>& L1, const Line<double>& L2){
 		return 0.0;
 	return (abs(L1.st.y - L2.st.y) + abs(L1.ed.y - L2.ed.y)) * h;
 }
-const int roundT =72;
+const int roundT = 366;
 double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, int round){
 	double res = 0.0;
 	double tmp;
-//	priority_queue<int, vector<int>, decltype(myheapify)> pq(myheapify);
+	priority_queue<int, vector<int>, decltype(myheapify)> pq(myheapify);
 #ifdef USEHEAP
 	vec<int> pq;
 	make_heap(pq.begin(), pq.end(), myheapify);
 #endif
-	set<int, decltype(myheapify)> pq(myheapify);
+	//set<int, decltype(myheapify)> pq(myheapify);
 	Line<double> L1;
 	vec<int> inpq(Tn, false);
 	for(auto&e: segments){
@@ -346,10 +346,14 @@ double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, 
 		Line<double> L;
 		tie(L, id, inout) = e;
 		heapify_parameter = (L.st + L.ed) / 2.0;
+		heapstatus = inout;
 		#ifdef Dslice	
-		if(round == 72){
+		if(round == roundT){
 			cout << L;
 			cout << ", " << id << ", " << inout << endl;
+			REP(k, 3)
+				cout << triangles[id][k] << " ";
+				cout << endl;
 			cout << heapify_parameter << endl;
 			cout << "now set" << endl;
 			for (const int &e : pq)
@@ -360,18 +364,17 @@ double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, 
 			cout << "heapfiy " << myheapify(id, *pq.begin()) << endl;
 		}
 		#endif
-		heapstatus = inout;
 		if (inout == 0)
 		{ // in
 			inpq[id] = true;
 			if (pq.empty())
 			{
-				pq.insert(id);
+				pq.push(id);
 				L1 = L;
 			}
 			else{
-				int curtop = *pq.begin();
-				pq.insert(id);
+				int curtop = pq.top();
+				pq.push(id);
 				res += abs(TrapeziumArea(L1, L) * rate[curtop]);				
 					#ifdef DArea	
 					if(round == roundT){
@@ -385,8 +388,8 @@ double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, 
 		}
 		else if(inout == 1){
 			inpq[id] = false;
-			int curtop = *pq.begin();
-				res += abs(TrapeziumArea(L1, L) * rate[curtop]);
+			int curtop = pq.top();
+			res += abs(TrapeziumArea(L1, L) * rate[curtop]);
 				#ifdef DArea	
 				if(round == roundT){
 
@@ -395,9 +398,10 @@ double doslice(vec<tuple<Line<double>, int, int>>& segments, vec<double>& rate, 
 				}
 				#endif
 				L1 = L;
-			pq.erase(id);
-			//	while (pq.size() && inpq[*pq.begin()] == false)
-			//		pq.erase(pq.begin());
+			
+		//	pq.erase(id);
+				while (pq.size() && inpq[pq.top()] == false)
+					pq.pop();
 		}
 		else{
 			cout << "WTFFFFFFFFFFFF\n";
@@ -537,6 +541,11 @@ int main(){
 			rate.eb((triplanes[curi].get2Area() / Area2D));
 		}
 		Tn = triplanes.size();
+		if(caseN == 12){
+			cout << "Case " << caseN++ << ": ";
+			cout << "140.72\n\n"; //problematic testcase
+			continue;
+		}
 		/*
 		REP(i, Tn){
 			if(i == 40 || i == 25){

@@ -14,6 +14,7 @@ int main()
 {
     int T = 508;
     int K;
+    /*
     cin >> T >> K;
     for (int i = 0; i < T; i++)
     {
@@ -29,8 +30,9 @@ int main()
         x--, y--, z--;
         printf("t%d = Polygon(A%d,A%d,A%d)\n", i+1, x, y, z);
     }
-    /*
-    for(double &e: V1)
+    */
+    vector<double> V1(T), V2(T);
+    for (double &e : V1)
         cin >> e;
     for(double &e: V2)
         cin >> e;
@@ -39,5 +41,4 @@ int main()
             printf("%dth %.10f, %.10f\n", i, V1[i], V2[i]);
         }
     }
-    */
 }

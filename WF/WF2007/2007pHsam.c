@@ -213,7 +213,7 @@ void ShowTriangle()
         ShowLine(tArray[i].lines[2]);
     }
 }
-const int roundT = 72;
+const int roundT = 366;
 double CalculateOriginalArea(Segment s1, Segment s2, double height, int triN, int round)
 {
     if(round == roundT){
