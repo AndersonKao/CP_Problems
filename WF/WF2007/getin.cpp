@@ -13,20 +13,21 @@ auto cmp = [](int a, int b)
 int main()
 {
     int T = 508;
-
-
-    priority_queue<int, vector<int>, decltype(cmp)> pq(cmp);
-    for (int i = 0; i < 100; i++)
-        pq.emplace(rand() % 10000);
-    vector<int> V1(pq.size());
-    copy(&(pq.top()), (&pq.top()) + pq.size(), V1.begin());
-    for(int &e:V1){
-        cout << e << " ";
+    int K;
+    cin >> T >> K;
+    for (int i = 0; i < T; i++)
+    {
+        int x, y, z;
+        cin >> x >> y >> z;
+        printf("A%d = (%d, %d, %d)\n",i,  x, y, z);
     }
-    cout << endl;
-    while(pq.size()){
-        cout << pq.top() << " ";
-        pq.pop();
+
+    for (int i = 0; i < K; i++)
+    {
+        int x, y, z;
+        cin >> x >> y >> z;
+        x--, y--, z--;
+        printf("t%d = Polygon(A%d,A%d,A%d)\n", i+1, x, y, z);
     }
     /*
     for(double &e: V1)

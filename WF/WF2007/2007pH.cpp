@@ -498,17 +498,12 @@ int main(){
 	while(cin >> Vn >> Tn){
 		if(Vn == 0 && Tn == 0)
 			break;
-		if(caseN == 12)
-			cout << Vn << " " << Tn << endl;
-//		vec<Point3D> pts3d(Vn);
 		pts3d.resize(Vn);
 		triplanes.clear();
 		triangles.clear();
 		REP(i, Vn)
 		{
 			cin >> pts3d[i].x >> pts3d[i].y >> pts3d[i].z;
-			if(caseN == 12)
-				cout<<  pts3d[i].x << " " << pts3d[i].y << " " << pts3d[i].z << endl;
 		}
 		vec<Point<int>> pts;	
 		REP(i, Vn){
@@ -520,12 +515,8 @@ int main(){
 			vec<int> pi(3);
 			REP(j, 3){
 				cin >> pi[j];
-				if(caseN == 12)
-					cout << pi[j] << " ";
 				pi[j]--;
 			}
-			if(caseN == 12)
-				cout << endl;
 			int Area2D = (pts[pi[1]] - pts[pi[0]]) ^ (pts[pi[2]] - pts[pi[0]]);
 			int curi = triangles.size();
 			if(Area2D == 0){
