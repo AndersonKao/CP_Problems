@@ -185,16 +185,72 @@ ostream &operator<<(ostream &os, const Line<F> &l)
 {
     return os << "(" << l.st.x << ", " << l.st.y << ") to (" << l.ed.x << ", " << l.ed.y << ")";
 }
+#define al(x) x.begin(), x.end()
+#define eb emplace_back
+#define F first
+#define S second
+using ll = long long;
+using uint = unsigned int;
+inline int nexti(int i, int n){
 
-int N;
-vector<vector<Point<int>>> triangles;
-vector<tuple<Point<int>, int, int>> pts;
+}
+int N, ans;
+bool sol;
+vector<vector<Point<ll>>> triangles;
+vector<tuple<Point<ll>, int, int>> pts;
+vector<Line<ll>> Lines;
+vector<int> layer;
+ll curx;
+
+int cmpid = -1;
+void pt
+auto Linecmp = [](int a, int b){
+	double y1, y2;	
+	Line<ll>L1;
+	Line<ll>L2 = Lines[b].F;
+	y1 = L1.st.y + (L1.vec().y * (curx - L1.st.x))/((double)L1.vec().x);
+	y2 = L2.st.y + (L2.vec().y * (curx - L2.st.x))/((double)L2.vec().x);
+	
+	if(fcmp(y1, y2) != 0){
+		return fcmp(y1, y2) < 0;
+	}
+	
+	return La.F < Lb.F;
+};
+set<int, decltype(Linecmp)> myS(Linecmp);
+using sIter = set<Line<ll>, decltype(Linecmp)>::iterator;
+
+void planesweeeep(){
+	Point<ll> curpt;
+	int tid, pid;
+	for(uint i =0 ; i < pts.size(); i++){
+		tie(curpt, tid, pid) = pts[i];
+		curx = curpt.x;
+		Line<ll> L1, L2;
+		sIter it2;
+		if(pid == 0){
+			L1 = Line<ll>(pts[0], pts[1]);
+			L2 = Line<ll>(pts[0], pts[1]);
+			it = myS.lower_bound(L1);
+			it = myS.lower_bound(L2);
+		}
+		else if(pid == 1){
+
+		}
+		else if(pid == 2){
+
+		}
+				
+	}
+}
 int main(){
 
     int caseN = 1;
     while(cin >> N){
         triangles.clear();
-        triangles.resize(N, vector<Point<int>>(3));
+        triangles.resize(N, vector<Point<ll>>(3));
+		layer.resize(N);
+		fill(al(layer), -1);
         pts.clear();
         for (int i = 0; i < N; i++){
             for (int j = 0; j < 3; j++){
@@ -202,14 +258,15 @@ int main(){
             }
             sort(triangles[i].begin(), triangles[i].end());
         }
-
         for (int i = 0; i < N; i++){
             for (int j = 0; j < 3; j++){
-                pts.eb(triangles[i][j], i, j);
+                Lines.eb(triangles[i][j], traingles[i][nexti(j, 3)]);
+				pts.eb(triangles[i][j], i, j); // 0 in 1 in 2 in
             }
         }
+		sort(pts.begin(), pts.end());
 
-        
+		planesweeeep();					
 
         cout << "Case " << caseN++ << ": ";
         if(sol){
