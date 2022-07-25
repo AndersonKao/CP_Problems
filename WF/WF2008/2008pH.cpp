@@ -1,3 +1,5 @@
+// remember tid * 3 shit
+// modify cp geometry
 #include <bits/stdc++.h>
 using namespace std;
 const double eps = 1e-6;
@@ -104,6 +106,7 @@ struct Line
         return (fcmp(a, 0.0)); // 1 on posi-side // -1 nega-side
         // a little bit useless?
     }
+    Line() : st(0, 0), ed(0,0) {}
     Line(const Point<T> x, const Point<T> y) : st(x), ed(y) {}
     template <class F>
     operator Line<F>() const
@@ -134,7 +137,7 @@ struct Line
     {
         return l.ori(st) * l.ori(ed) < 0 and ori(l.st) * ori(l.ed) < 0;
     }
-    bool isSegIntersection(const Line l)const{
+    bool isSegIntersection(const Line<Real> l)const{
         Line<Real> h = *this;
         // hst = 1, hed = 2, lst = 3, led = 4
         double hlst = h.ori(l.st);
@@ -192,82 +195,199 @@ ostream &operator<<(ostream &os, const Line<F> &l)
 using ll = long long;
 using uint = unsigned int;
 inline int nexti(int i, int n){
-
+	return i + 1 == n ? 0 : i + 1;
 }
 int N, ans;
 bool sol;
-vector<vector<Point<ll>>> triangles;
-vector<tuple<Point<ll>, int, int>> pts;
-vector<Line<ll>> Lines;
+vector<Line<ll>> lines;
+vector<int> ty;
+vector<tuple<int, int, int>> events; // x-val, triangle id, event-id(0,1,2)
 vector<int> layer;
 ll curx;
 
 int cmpid = -1;
-void pt
+using Lii = tuple<Line<ll>, int, int>;
 auto Linecmp = [](int a, int b){
 	double y1, y2;	
-	Line<ll>L1;
-	Line<ll>L2 = Lines[b].F;
-	y1 = L1.st.y + (L1.vec().y * (curx - L1.st.x))/((double)L1.vec().x);
-	y2 = L2.st.y + (L2.vec().y * (curx - L2.st.x))/((double)L2.vec().x);
+	Line<ll>&L1 = lines[a], &L2 = lines[b];
+	if(curx == L1.st.x)
+		y1 = L1.st.y;
+	else
+		y1 = L1.st.y + (L1.vec().y * (curx - L1.st.x))/((double)L1.vec().x);
+	if(curx == L2.st.x)
+		y2 = L2.st.y;
+	else
+		y2 = L2.st.y + (L2.vec().y * (curx - L2.st.x))/((double)L2.vec().x);
 	
 	if(fcmp(y1, y2) != 0){
-		return fcmp(y1, y2) < 0;
+		return y1 < y2; 
 	}
-	
-	return La.F < Lb.F;
+	return ty[a] < ty[b];
 };
 set<int, decltype(Linecmp)> myS(Linecmp);
-using sIter = set<Line<ll>, decltype(Linecmp)>::iterator;
-
+using sIter = set<int, decltype(Linecmp)>::iterator;
+vector<sIter> where;
+sIter next(sIter it){
+	return ++it; 
+}
+sIter prev(sIter it){
+	return it == myS.begin() ? myS.end() : --it; 
+}
+bool check(const int a, const int b){
+	if(a / 3 == b / 3)
+		return false;
+	return (lines[a]).isSegIntersection(lines[b]);
+}
 void planesweeeep(){
-	Point<ll> curpt;
 	int tid, pid;
-	for(uint i =0 ; i < pts.size(); i++){
-		tie(curpt, tid, pid) = pts[i];
-		curx = curpt.x;
-		Line<ll> L1, L2;
-		sIter it2;
+	Line<ll> cmpL;
+	int cmptid, cmpeid;
+	for(uint ei =0 ; ei < events.size(); ei++){
+		tie(curx, tid, pid) = events[ei];
+//	cout << curx << ", " << tid << ", " << pid << endl;
+		sIter itd, itu;
 		if(pid == 0){
-			L1 = Line<ll>(pts[0], pts[1]);
-			L2 = Line<ll>(pts[0], pts[1]);
-			it = myS.lower_bound(L1);
-			it = myS.lower_bound(L2);
+			for(int i = 0; i <= 1; i ++){
+				int in = tid * 3 + i;
+				itu = myS.lower_bound(in); //up  
+				if(itu != myS.end()){
+					for(int j = 0; j <= 1; j++){
+						int chi = tid * 3 + j;
+						if(check(chi, *itu)){
+							sol = false;
+						}
+					}
+				}	
+				itd = prev(itu); // down 
+				if(itd != myS.end()){
+					for(int j = 0; j <= 1; j++){
+						int chi = tid * 3 + j;
+						if(check(chi, *itd)){
+							sol = false;
+						}
+					}
+				}	
+				if(i == 0){
+					if(itu == myS.end() || itd == myS.end()){
+						layer[tid] = 2;
+					}
+					else{
+//						cout << "tri " << tid << " is under " << *itu/3 << " above " << *itd /3 << endl;
+						int ulayer = layer[*itu / 3];
+						int dlayer = layer[*itd /3];
+						layer[tid] = min(ulayer, dlayer)+1;							
+					}
+				}
+			}
+			for(int i = 0; i <= 1; i ++){
+				where[tid * 3 + i] = myS.insert(tid * 3 + i).F;
+			}
 		}
 		else if(pid == 1){
-
+			int out = tid*3 + 0;
+			int in = tid*3 + 2;
+			// plugout
+			myS.erase(out);	
+			itu = myS.lower_bound(out); //up 
+			itd = prev(itu); //  down
+			if(itd != myS.end() && itu != myS.end()){
+				if(check(*itd, *itu)){
+					sol = false;	
+				}	
+			}
+			itu = myS.lower_bound(in);
+			itd = prev(itu);
+			if(itd != myS.end()){
+				if(check(in, *itd)){
+					sol = false;
+				}
+			}	
+			if(itu != myS.end()){
+				if(check(in, *itu)){
+					sol = false;
+				}
+			}	
+			where[in] = myS.insert(in).F;
 		}
 		else if(pid == 2){
+			int out = tid*3 + 1, out2 = tid*3 + 2;
+			myS.erase(out);
+			myS.erase(out2);
+			//myS.erase(where[out2]);
+			//myS.erase(where[out2]);
+			itu = myS.lower_bound(out);
+			itd = prev(itu);
+			if(itu != myS.end() && itd != myS.end()){
+				if(check(*itd, *itu)){
+					sol = false;	
+				}	
+			}
+			itu = myS.lower_bound(out2);
+			itd = prev(itu);
+			if(itu != myS.end() && itd != myS.end()){
+				if(check(*itd, *itu)){
+					sol = false;	
+				}	
+			}
 
 		}
-				
+/*
+		cout << "insect\n";
+		for(auto e: myS){
+			cout  << "tri: " << e/ 3 << "lid " << e%3 << ": "<< lines[e]  << endl; 
+		}
+*/
 	}
 }
 int main(){
-
     int caseN = 1;
     while(cin >> N){
-        triangles.clear();
-        triangles.resize(N, vector<Point<ll>>(3));
+		if(N == -1)
+			break;
+		if(N == 0){
+			cout << "Case " << caseN++ << ": 1 shades\n";
+			continue;
+		}
+		lines.clear();
+		myS.clear();
+		events.clear();
+		sol = true;
+		where.resize(3*N);
 		layer.resize(N);
-		fill(al(layer), -1);
-        pts.clear();
-        for (int i = 0; i < N; i++){
+		ty.resize(3*N);	
+        for (int i = 0; i < 3* N; i+= 3){
+			vector<Point<ll>> pts(3);
             for (int j = 0; j < 3; j++){
-                cin >> triangles[i][j];
+                cin >> pts[j];
             }
-            sort(triangles[i].begin(), triangles[i].end());
-        }
-        for (int i = 0; i < N; i++){
+            sort(pts.begin(), pts.end());
+			lines.eb(pts[0], pts[1]);
+			lines.eb(pts[0], pts[2]);
+			lines.eb(pts[1], pts[2]);
+			ty[i + 0]= ty[i + 2] = lines[i + 0].orint(pts[2]) < 0;
+			ty[i + 1] = ty[i + 0] ^ 1;
             for (int j = 0; j < 3; j++){
-                Lines.eb(triangles[i][j], traingles[i][nexti(j, 3)]);
-				pts.eb(triangles[i][j], i, j); // 0 in 1 in 2 in
-            }
+				events.eb(pts[j].x, i/3, j);
+			}
         }
-		sort(pts.begin(), pts.end());
-
+		auto eventcmp = [](tuple<int, int, int>&a, tuple<int,int,int>&b){
+			int x1 = get<0>(a);
+			int x2 = get<0>(b);
+			return x1 == x2 ? get<2>(a) < get<2>(b) : x1 < x2; 
+		};
+		sort(events.begin(), events.end(), eventcmp);
+/*
+		for(uint ei =0 ; ei < events.size(); ei++){
+			int tid, pid;
+			tie(curx, tid, pid) = events[ei];
+			cout << curx << ", " << tid << ", " << pid << endl;
+		}
+*/
 		planesweeeep();					
-
+		ans = 0;
+		for(int i = 0; i< N; i++){
+			ans = max(ans, layer[i]);
+		}
         cout << "Case " << caseN++ << ": ";
         if(sol){
             cout << ans << " shades\n";
