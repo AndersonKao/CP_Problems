@@ -274,8 +274,11 @@ void planesweeeep(){
 					else{
 //						cout << "tri " << tid << " is under " << *itu/3 << " above " << *itd /3 << endl;
 						int ulayer = layer[*itu / 3];
-						int dlayer = layer[*itd /3];
-						layer[tid] = min(ulayer, dlayer)+1;							
+						int dlayer = layer[*itd / 3];
+						if(*itu/3 == *itd/3)
+							layer[tid] = ulayer+1;
+						else 
+							layer[tid] = max(ulayer, dlayer);							
 					}
 				}
 			}
