@@ -1,5 +1,3 @@
-// next_permutation return boolean.
-// if want descreasing, remember to put compare function
 #include <bits/stdc++.h>
 using namespace std;
 const double eps = 1e-6;
@@ -187,94 +185,78 @@ ostream &operator<<(ostream &os, const Line<F> &l)
 {
     return os << "(" << l.st.x << ", " << l.st.y << ") to (" << l.ed.x << ", " << l.ed.y << ")";
 }
+template <class F>
+using Polygon = vector<Point<F>>;
+template <class F>
+Polygon<F> getConvexHull(Polygon <F> points) {
+    sort(points.begin(), points.end());
+    Polygon<F> CH;
+    CH.reserve(points.size() + 1); // for what ??
+    for (int round = 0; round < 2; round++){
+        int start = CH.size();
+        for (Point<int> &pt: points) {
+            while (CH.size() - start >= 2 && Line<F>(CH[CH.size() - 2], CH[CH.size() - 1]).ori(pt) <= 0) // ? Line is different than senpai's .
+            {
+                CH.pop_back();
+            }
+            CH.emplace_back(pt);
+        }
+        CH.pop_back();
+        
+        reverse(points.begin(), points.end());
+    }
+    if (CH.size() == 2 && CH[0] == CH[1])
+        CH.pop_back();
+    return CH;
+}
+#define eb emplace_back
 #define debug(x) cout << #x << ": " << x << endl;
-vector<double> rs(4);
-vector<Point<double>> center(4);
-Point<double> get(double r1, double M, double& theta){
-	double a = M - rs[0];	
-	double b = M - r1;
-	double c = rs[0] + r1;
-	theta = acos((a*a + b*b - c*c) / (a*b * 2));
-	// c^2 = a ^2 + b^2 - 2abcos(theta).
-	return Point<double>(b * sin(theta), -b * cos(theta));
-}
-bool verify(){
-	for(int i = 0; i < 4; i++){
-		for(int j = i + 1; j < 4; j++){
-			double dis2 = (center[i] - center[j]).norm();
-			double R = rs[i] + rs[j];
-			if(fcmp(dis2, R*R) < 0)
-				return false; 
-		}
+int N, M;
+void genSubset(vector<int>& subset, int x, int dep){
+	if(dep == N){
+		if(x > 0)
+			subset.eb(x);
+		return ;
 	}
-	return true;
-}
-bool test(double M){
-	if(fcmp(M, rs[0]) <= 0)
-		return false;
-	center[0] = Point<double>(0.0, -(M-rs[0]));
-		
-	double t1;
-	for(int i = 1; i <= 2; i++)
-		center[i] = get(rs[i], M, t1);
-	center[2].x = -center[2].x;
-	double a = M - rs[2];
-	double b = M - rs[3];
-	double c = rs[2] + rs[3];
-	double theta3 = acos((a*a + b*b - c*c) / (a*b * 2));
-	theta3 += t1;
-	//theta3 = max(theta0, theta3);
-	center[3] = Point<double>(-b*sin(theta3), -b*cos(theta3));
-#ifdef Dpt
-	for(int i = 0; i < 4; i++){
-		cout << i << ": " << center[i] << endl;
-	}
-#endif
-	if(verify())
-		return true;
-	a = M - rs[0];
-	c = rs[0] + rs[3];
-	theta3 = acos((a*a + b*b - c*c) / (a*b * 2));
-	center[3] = Point<double>(-b*sin(theta3), -b*cos(theta3));
-	if(verify())
-		return true;
-	center[3] = Point<double>(b*sin(theta3), -b*cos(theta3));
-	
-	return verify();
-
-	
-	
+	if(x & (1 << dep))
+		genSubset(subset, x - (1 << dep), dep+1);
+	genSubset(subset, x, dep+1);
 }
 
 int main(){
 	int caseN = 1;
-	while(cin >> rs[0]){
-		if(fcmp(rs[0], 0.0) == 0)
-			break;	
-		for(int i = 1; i < 4; i++)
-			cin >> rs[i];
-		sort(rs.begin(), rs.end(), greater<double>());
-		double L = 0.0, R = 100000.0;					
-		while(abs(R-L) > eps){
-			double M = (L+ R)/2;
-//			debug(M);
-			bool sol = false;
-			do{
-				sol = test(M);
-				if(sol)	
-					break;
-			}while(next_permutation(rs.begin()+1, rs.end(),greater<double>()) && sol == false);
-			if(sol){
-				R = M;
-			}
-			else{
-				L = M;
-			}
+	while(cin >> N >> M){
+		if(N == 0 && M == 0){
+			break;
 		}
-		R += eps;
-		cout << "Case " << caseN++ << ": ";
-		cout << (int)(round(R)) << endl;
-
-	}	
+		vector<Point<int>> pts(N);
+		for(int i = 0; i < N; i++)
+			cin >> pts[i];
+		vector<double> dp(1 << N, 0.0);
+		
+		for(int i = 1; i < (1 << N); i++){
+			Polygon<int> genpts;	
+			for(int j = 0; j < N; j++){
+				if(i & (1 << j)){
+					genpts.eb(pts[j]);	
+				}	
+			}
+			genpts = getConvexHull(genpts);
+			dp[i] = 0.0;	
+			for(int k = 0; k < genpts.size(); k++){
+				int nk = ((k + 1) == (int)genpts.size()) ? 0 : (k + 1);
+				dp[i] += sqrt((double)(genpts[nk] - genpts[k]).norm());
+			}
+			dp[i] += 2.0 * M_PI * M;
+			vector<int> subset;		
+			genSubset(subset, i, 0);
+			for(int s : subset){
+				if(s == i)	
+					continue;
+				dp[i] = min(dp[i], dp[s] + dp[i-s]);
+			}
+		}	
+		cout << "Case " << caseN++ << ": length = " << fixed << setprecision(2) <<  dp[(1 << N) - 1] <<endl;
+	}
 	return 0;
 }
