@@ -10,7 +10,8 @@ using namespace std;
 #define LC(x) (x * 2 + 1)
 #define RC(x) (x * 2 + 2)
 #define debug(x) cout << #x << ": " << x << endl;
-const double eps = 1e-2;
+using ll = long long;
+const double eps = 1e-6;
 int fcmp(double a, double b){
 	if(abs(a-b) < eps){
 		return 0;
@@ -135,16 +136,16 @@ int main(){
 		debug(wmax);
 #endif
 		double nL, nR, wL, wR;
-		nR = (nmin / 0.95) * 2.0;
-		nL = (nmax / 1.05) * 2.0;
+		nR = (nmin / 0.95) * 2.0 + eps;
+		nL = (nmax / 1.05) * 2.0 - eps;
 		if(fcmp(nL, nR) > 0){
 			badcode = true;
 #ifdef Debug
 		cout << "narrow range\n";
 #endif
 		}
-		wR = (wmin / 0.95);
-		wL = (wmax / 1.05);
+		wR = (wmin / 0.95) + eps;
+		wL = (wmax / 1.05) - eps;
 		if(fcmp(wL, wR) > 0){
 			badcode = true;
 #ifdef Debug
@@ -179,8 +180,6 @@ int main(){
 		}
 		vector<char> destr;	
 		vector<int> deval;
-		int Csum, Ksum;
-		Csum = Ksum = 0;
 		int idx = 5;
 #ifdef Debug
 		for(int i = 0; i < m; i++){
@@ -188,6 +187,7 @@ int main(){
 		}
 		cout << endl;
 #endif
+		bool goodend = false;
 		while(idx < type.size()){
 			if(type[idx] != 0){
 				badcode = true;
@@ -195,14 +195,20 @@ int main(){
 			}
 			idx++;
 			char ch = decode(type, idx);
-//			debug(ch);
-			if(ch == 'S')
+			if(ch == ' '){
+				badcode = true;
 				break;
+			}
+//			debug(ch);
+			if(ch == 'S' && idx + 5 == type.size()){
+				goodend = true;
+				break;
+			}
 			destr.eb(ch);
 			deval.eb(ch == '-' ? 10 : ((int)ch - '0'));
 			idx += 5;
 		}
-		if(badcode){
+		if(badcode || goodend == false){
 			cout << "Case " << caseN++ << ": bad code\n";
 #ifdef Debug
 		cout << "decoding error \n";
@@ -214,14 +220,15 @@ int main(){
 				cout << destr[i];
 			cout << endl;
 #endif
+		ll Csum, Ksum;
+		Csum = Ksum = 0;
 		int Cn = deval.size() - 2;
 		for(int i = 0; i < Cn; i++){
 			Csum += (((Cn-(i+1)) % 10) + 1)*deval[i];
-			Csum %= 11;
 			Ksum += (((Cn-(i+1)+1) % 9) + 1)*deval[i];
-			Ksum %= 11;
 		}	
 		Ksum += (((0 % 9) + 1 ) * deval[Cn]);
+		Csum %= 11;
 		Ksum %= 11;
 		cout << "Case " << caseN++ << ": ";
 		if(Csum != deval[Cn]){
