@@ -1,6 +1,12 @@
-// first narrow range should be
-// L = V[0] / 1.05 * 0.95, R = V[0] / 0.95 * 1.05
-// range case can be 0. (>= 0 will causes error
+// AC
+// WA
+// intersection number may up to long long range
+// RE
+// recursion is too deep
+// WA
+// forget I have sort between [1, R], [1, C] rather than [0, R), [0, C)
+// WA
+// wrong generating laser
 #include <bits/stdc++.h>
 using namespace std;
 #define al(x) x.begin(), x.end()
@@ -12,6 +18,12 @@ using namespace std;
 #define debug(x) cout << #x << ": " << x << endl;
 #define lb lower_bound
 #define ub upper_bound
+/*
+#define Dgen
+#define Dround
+#define DsegT
+#define Devent
+*/
 using ll = long long;
 using pii = pair<int ,int>;
 int R, C, M, N;
@@ -28,6 +40,19 @@ struct mirror{
 ostream& operator<<(ostream& os, const mirror& rhs){
 	return (os << "(" << rhs.r << ", " << rhs.c << ")");
 }
+struct event{
+	int type; // 0 for in, 1 for out, 2 for query
+	int r, c;
+	int len = 0;
+	event(){}
+	event(int t, int r, int c):type(t), r(r), c(c){};
+	event(int t, int r, int c, int len):type(t), r(r), c(c), len(len){};
+	friend ostream& operator<<(ostream& os, const event& e);
+};
+ostream& operator<<(ostream& os, const event& e){
+	return (os << e.type << ", " << e.r << ", " << e.c << ", " << e.len);
+}
+
 struct point{
 	int r, c;	
 	point(){}
@@ -62,82 +87,120 @@ using iter = vector<mirror>::iterator;
 auto mcmp = [](const mirror& lhs, const mirror& rhs){
 		return (lhs.r == rhs.r ? (lhs.c < rhs.c) : (lhs.r < rhs.r));
 };
-void genSegments(vector<segment>& base, int pr, int pc, int d){
+bool genSegments(vector<vector<event>>& Es, int pr, int pc, int d, int dt){
 	mirror cur(pr, pc, -1);
-//	cout << "now " << cur.r << ", " << cur.c << ", " << d << endl;
-	if(d == 0){
-		iter nxt = ub(al(mRow[pr]), cur, mcmp);
-		if(nxt != mRow[pr].end()){
-			base.eb(pr, pc, nxt->r, nxt->c);	
-			if(nxt->type == 0)
-				genSegments(base, nxt->r, nxt->c, 2);
-			else
-				genSegments(base, nxt->r, nxt->c, 3);
+	while(true){
+		pr = cur.r, pc = cur.c;
+#ifdef Dgen
+	cout << (dt == 0 ? "Laser : " : "Detector : ");
+	cout << "now " << cur.r << ", " << cur.c << ", " << d << endl;
+#endif
+		if(d == 0){
+			iter nxt = ub(al(mRow[pr]), cur, mcmp);
+			if(nxt != mRow[pr].end()){
+	//			base.eb(pr, pc, nxt->r, nxt->c);	
+				Es[dt].eb(0, pr, pc, -1);	
+				Es[dt].eb(1, nxt->r, nxt->c, -1);	
+				if(nxt->type == 0)
+					d = 2;
+	//				genSegments(Es, nxt->r, nxt->c, 2, dt);
+				else
+					d = 3;
+//					genSegments(Es, nxt->r, nxt->c, 3, dt);
+				cur = *nxt;
+			}
+			else{
+	//			base.eb(pr, pc, pr, C+1);
+#ifdef Dgen
+	cout << (dt == 0 ? "Laser : " : "Detector : ");
+	cout << "now " << pr << ", " << C+1 << ", " << d << endl;
+#endif
+				Es[dt].eb(0, pr, pc, -1);	
+				Es[dt].eb(1, pr, C+1, -1);	
+				if(dt == 0){
+					if(pr == R){
+						return true;
+					}
+				}
+				return false;
+			}
+		}	
+		else if(d == 1){
+			iter nxt = lb(al(mRow[pr]), cur, mcmp);
+			if(nxt != mRow[pr].begin()){
+				nxt--;
+	//			base.eb(nxt->r, nxt->c, pr, pc);	
+				Es[dt].eb(0, nxt->r, nxt->c, -1);	
+				Es[dt].eb(1, pr, pc, -1);	
+				if(nxt->type == 0)
+					d = 3;
+//					genSegments(Es, nxt->r, nxt->c, 3, dt);
+				else
+					d = 2;
+//					genSegments(Es, nxt->r, nxt->c, 2, dt);
+				cur = *nxt;
+			}
+			else{
+	//			base.eb(pr, 0, pr, pc);
+				Es[dt].eb(0, pr, 0, -1);	
+				Es[dt].eb(1, pr, pc, -1);	
+#ifdef Dgen
+	cout << (dt == 0 ? "Laser : " : "Detector : ");
+	cout << "now " << pr << ", " << 0 << ", " << d << endl;
+#endif
+				return false;
+			}
 		}
-		else{
-			base.eb(pr, pc, pr, C+1);
-			return ;
-		}
-	}	
-	else if(d == 1){
-		iter nxt = lb(al(mRow[pr]), cur, mcmp);
-		if(nxt != mRow[pr].begin()){
-			nxt--;
-//			base.eb(pr, pc, nxt->r, nxt->c);	
-			base.eb(nxt->r, nxt->c, pr, pc);	
-			if(nxt->type == 0)
-				genSegments(base, nxt->r, nxt->c, 3);
-			else
-				genSegments(base, nxt->r, nxt->c, 2);
-		}
-		else{
-			base.eb(pr, pc, pr, 0);
-			return ;
+		else if(d == 3){
+			iter nxt = ub(al(mCol[pc]), cur, mcmp);
+			if(nxt != mCol[pc].end()){
+	//			base.eb(pr, pc, nxt->r, nxt->c);	
+				Es[dt^1].eb(2, pr + 1, pc, nxt->r - pr - 2);
+				if(nxt->type == 0)
+					d = 1;
+//					genSegments(Es, nxt->r, nxt->c, 1, dt);
+				else
+					d = 0;
+//					genSegments(Es, nxt->r, nxt->c, 0, dt);
+				cur = *nxt;
+			}
+			else{
+	//			base.eb(pr, pc, R+1 , pc);
+				Es[dt^1].eb(2, pr + 1, pc, R+1 - pr - 2);
+#ifdef Dgen
+	cout << (dt == 0 ? "Laser : " : "Detector : ");
+	cout << "now " << R+1 << ", " << pc << ", " << d << endl;
+#endif
+				return false;
+			}
+		}	
+		else if(d == 2){
+			iter nxt = lb(al(mCol[pc]), cur, mcmp);
+			if(nxt != mCol[pc].begin()){
+				nxt--;
+	//			base.eb(nxt->r, nxt->c, pr, pc);	
+				Es[dt^1].eb(2, nxt->r + 1, nxt->c, pr - nxt->r - 2);
+				if(nxt->type == 0)
+					d = 0;
+//					genSegments(Es, nxt->r, nxt->c, 0, dt);
+				else
+					d  = 1;
+//					genSegments(Es, nxt->r, nxt->c, 1, dt);
+					cur = *nxt;
+			}
+			else{
+	//			base.eb(0, pc, pr, pc);
+				Es[dt^1].eb(2, 1, pc, pr - 0 - 2);
+#ifdef Dgen
+	cout << (dt == 0 ? "Laser : " : "Detector : ");
+	cout << "now " << 0 << ", " << pc << ", " << d << endl;
+#endif
+				return false;
+			}
 		}
 	}
-	else if(d == 3){
-		iter nxt = ub(al(mCol[pc]), cur, mcmp);
-		if(nxt != mCol[pc].end()){
-			base.eb(pr, pc, nxt->r, nxt->c);	
-			if(nxt->type == 0)
-				genSegments(base, nxt->r, nxt->c, 1);
-			else
-				genSegments(base, nxt->r, nxt->c, 0);
-		}
-		else{
-			base.eb(pr, pc, R+1 , pc);
-			return ;
-		}
-	}	
-	else if(d == 2){
-		iter nxt = lb(al(mCol[pc]), cur, mcmp);
-		if(nxt != mCol[pc].begin()){
-			nxt--;
-//			base.eb(pr, pc, nxt->r, nxt->c);	
-			base.eb(nxt->r, nxt->c, pr, pc);	
-			if(nxt->type == 0)
-				genSegments(base, nxt->r, nxt->c, 0);
-			else
-				genSegments(base, nxt->r, nxt->c, 1);
-		}
-		else{
-			base.eb(pr, pc, 0, pc);
-			return ;
-		}
-	}
+	return false;
 };
-struct event{
-	int type; // 0 for in, 1 for out, 2 for query
-	int r, c;
-	int len = 0;
-	event(){}
-	event(int t, int r, int c):type(t), r(r), c(c){};
-	event(int t, int r, int c, int len):type(t), r(r), c(c), len(len){};
-	friend ostream& operator<<(ostream& os, const event& e);
-};
-ostream& operator<<(ostream& os, const event& e){
-	return (os << e.type << ", " << e.r << ", " << e.c << ", " << e.len);
-}
 struct segT{
 	vector<int> seq;
 //	vector<int> tag;
@@ -203,7 +266,9 @@ struct segT{
 		print(0, N-1, 0);
 	}
 	void print(int L, int R, int idx){
+#ifdef DsegT
 		cout << L << " to " << R << ": " << seq[idx] << endl;
+#endif 
 		if(L == R)
 			return;
 		int M = (L+R)>>1;
@@ -232,10 +297,10 @@ int main(){
 		}
 //		mRow[0].eb(1, 0, 2);
 //		mRow[R-1].eb(R, C+1, 2);
-		for(int i = 0; i < R; i++){
+		for(int i = 1; i <= R; i++){
 			sort(al(mRow[i]));
 		}
-		for(int i = 0; i < C; i++){
+		for(int i = 1; i <= C; i++){
 			sort(al(mCol[i]));
 		}
 #ifdef Dsort
@@ -258,6 +323,7 @@ int main(){
 			}
 		}	
 #endif
+	/*
 		vector<segment> Laser;	
 		genSegments(Laser, 1, 0, 0);
 #ifdef Dgen
@@ -278,7 +344,14 @@ int main(){
 			cout << e << endl;
 		}
 #endif
-		vector<event> Es[2];
+		*/
+		vector<vector<event>> Es(2);
+		if(genSegments(Es, 1, 0 ,0, false)){
+			cout << "Case " << caseN++ << ": 0\n";
+			continue;
+		}
+		genSegments(Es, R, C+1, 1, true);
+		/*
 		for(auto&e: Laser){ // blueline
 			if(e.st.r == e.ed.r){ // -------
 				Es[0].eb(0, e.st.r, e.st.c, -1);	
@@ -297,20 +370,25 @@ int main(){
 				Es[0].eb(2, e.st.r + 1, e.st.c, e.ed.r - e.st.r - 2);
 			}
 		}	
+		*/
 		auto ecmp = [](const event& lhs, const event&rhs){
 			return (lhs.c == rhs.c ? (lhs.type < rhs.type) : (lhs.c < rhs.c));
 		};	
 		for(int i = 0; i < 2; i++)
 			sort(al(Es[i]), ecmp);
 		segT mT;
-		int ans = 0;
+		ll ans = 0;
 		point apt(2*R, 2*C);
 		for(int j = 0; j < 2; j++){
-//			cout << "round " << j << "------------------------\n";
+#ifdef Dround
+			cout << "round " << j << "------------------------\n";
+#endif
 			mT.Build(R+2);
 			for(int i = 0; i < Es[j].size(); i++){
 				event& e = Es[j][i];
-//				cout << "event: " << e << endl;
+#ifdef Devent
+				cout << "event: " << e << endl;
+#endif
 				if(e.type == 0){
 					mT.Modify(e.r, 1);
 				}
@@ -321,9 +399,12 @@ int main(){
 					int itsc = mT.RangeS(e.r, e.r + e.len);
 					ans += itsc;
 					if(itsc > 0){
-//						cout << "get inter \n";
 						int rpos = mT.Query(e.r, e.r+e.len);	
-//						debug(rpos);
+#ifdef Dinter
+						cout << "get inter \n";
+						debug(rpos);
+						debug(e.c);
+#endif
 						if(rpos < apt.r){
 							apt.r = rpos;
 							apt.c = e.c;
