@@ -1,6 +1,17 @@
+// WA
+// need brute force check inconsistent
+// since rotation and scale may be symmetric
+// WA
+// numeric_limits<double>::min causing error, idk why...
+// WA
+// init max should be dMIN...
+// WA
+// scale ans translation parameter has to be integer
 #include <bits/stdc++.h>
 using namespace std;
 const double eps = 1e-6;
+const int dINF = 100000;
+const int dMIN = -100000;
 inline int fcmp(const double &a, const double &b){
     if(fabs(a - b) < eps)
         return 0;
@@ -76,7 +87,7 @@ istream &operator>>(istream &is, Point<F> &pt)
 template <class F>
 bool collinearity(const Point<F>& p1, const Point<F>& p2, const Point<F>& p3){
     if(std::is_integral<F>::value)
-        return (p1 - p3) ^ (p2 - p3) == 0;
+        return fcmp((p1 - p3) ^ (p2 - p3), 0.0) == 0;
     return fcmp((p1 - p3) ^ (p2 - p3), 0.0) == 0;
 }
 // check co-line first. properly
@@ -130,7 +141,7 @@ struct Line
         return Point<F>(st) + vec() * x;
     }
 
-    bool isSegProperIntersection(const Line l) const
+   bool isSegProperIntersection(const Line l) const
     {
         return l.ori(st) * l.ori(ed) < 0 and ori(l.st) * ori(l.ed) < 0;
     }
@@ -187,11 +198,17 @@ ostream &operator<<(ostream &os, const Line<F> &l)
 }
 #define al(x) x.begin(), x.end()
 #define debug(x) cout << #x << ": " << x << endl;
+using pii = pair<int, int>;
+#define F first
+#define S second
+
+#define mp make_pair
+#define eb emplace_back 
+vector<pair<pii, pii>> ANSs;
 vector<int> mto(3);
 vector<Point<int>> from(3), to(3);
 template<typename T>
 void PrintVec(vector<Point<T>>& Vs){
-	cout << "Points: ";
 	for(int i = 0; i < 3; i++){
 		cout << Vs[i] << ", ";
 	}
@@ -204,72 +221,120 @@ void rotation(int rx, int ry, vector<Point<int>>& pts){
 		pts[i] = Point<int>(round(pt.x), round(pt.y));
 	}	
 }
-bool transcale(vector<Point<int>>& pt){
-	Point<int> offset(to[mto[0]].x - pt[0].x, to[mto[0]].y - pt[0].y);
+void transcale(vector<Point<int>>& pt, int rx, int ry){
 	double xscale = 1.0, yscale = 1.0;
-	for(int i = 1; i < 3;i++){
-		if(pt[i].x != pt[0].x && to[mto[i]].x != to[mto[0]].x)
-			xscale = (double)(pt[i].x - pt[0].x) / (to[mto[i]].x - to[mto[0]].x);
-		if(pt[i].y != pt[0].y && to[mto[i]].y != to[mto[0]].y)
-			yscale = (double)(pt[i].y - pt[0].y) / (to[mto[i]].y - to[mto[0]].y);
-	}
-	vector<Point<double>> mpt(3);
-	for(int i = 0; i < 3;i++)
-		mpt[i] = Point<double>(pt[i] + offset);
-	cout << "offset mpt: ";
-	PrintVec(mpt);
-	for(int i = 1; i < 3;i++)
-		mpt[i] = mpt[i]+Point<double>((mpt[i] - mpt[0]).x * xscale,(mpt[i] - mpt[0]).y * yscale);
-	debug(xscale);
-	debug(yscale);
-	cout << "mpt: ";
-	PrintVec(mpt);
-	cout << "mto: ";
+	int toxmax = dMIN, toxmin = dINF, toymax = dMIN, toymin = dINF;
+	int ptxmax = dMIN, ptxmin = dINF, ptymax = dMIN, ptymin = dINF;
 	for(int i = 0; i < 3; i++){
-		cout << to[mto[i]] << ", ";
+		ptxmax = max(ptxmax, pt[i].x);
+		ptymax = max(ptymax, pt[i].y);
+		ptxmin = min(ptxmin, pt[i].x);
+		ptymin = min(ptymin, pt[i].y);
 	}
-	cout << endl;
-	bool same = true;	
 	for(int i = 0; i < 3; i++){
-		if(fcmp(mpt[i].x, to[mto[i]].x) != 0){
-			same = false; break;
+		toxmax = max(toxmax, to[i].x);
+		toymax = max(toymax, to[i].y);
+		toxmin = min(toxmin, to[i].x);
+		toymin = min(toymin, to[i].y);
+	}
+	int ptxoff = abs(ptxmax - ptxmin), ptyoff = abs(ptymax - ptymin);
+	int toxoff = abs(toxmax - toxmin), toyoff = abs(toymax - toymin);
+	
+	if(ptxoff != 0 && toxoff != 0)
+		xscale = toxoff / ptxoff;
+	if(ptyoff != 0 && toyoff != 0)
+		yscale = toyoff / ptyoff;
+#ifdef Dmm
+		debug(ptxmax);
+		debug(ptxmin);
+		debug(ptymax);
+		debug(ptymin);
+		debug(toxmax);
+		debug(toxmin);
+		debug(toymax);
+		debug(toymin);
+		debug(ptxoff);
+		debug(ptyoff);
+		debug(toxoff);
+		debug(toyoff);
+		debug(xscale);
+		debug(yscale);
+#endif
+	for(int t = 0; t < 4; t++){
+		int xs = ((t & 1) ? xscale : -xscale);
+		int ys = ((t & 2) ? yscale : -yscale);
+//		double xs = xscale, ys = yscale;
+		vector<Point<int>> mpt(3);
+		for(int i = 0; i < 3;i++)
+			mpt[i] = Point<int>(pt[i].x * xs, pt[i].y * ys);
+		Point<int> offset(to[mto[0]].x - mpt[0].x, to[mto[0]].y - mpt[0].y);
+		for(int i = 0; i < 3;i++)
+			mpt[i] = mpt[i] + offset;
+#ifdef Dscale
+		debug(xscale);
+		debug(yscale);
+#endif
+#ifdef Dsame
+		cout << "mpt: ";
+		PrintVec(mpt);
+		cout << "mto: ";
+		for(int i = 0; i < 3; i++){
+			cout << to[mto[i]] << ", ";
 		}
-		if(fcmp(mpt[i].y, to[mto[i]].y) != 0){
-			same = false; break;
+		cout << endl;
+#endif
+		bool same = true;	
+		for(int i = 0; i < 3; i++){
+			if(fcmp(mpt[i].x, to[mto[i]].x) != 0){
+				same = false; break;
+			}
+			if(fcmp(mpt[i].y, to[mto[i]].y) != 0){
+				same = false; break;
+			}
+		}
+		if(same){
+#ifdef Dget
+			cout << "getsol\n";			
+			debug(offset);
+			debug(xs);
+			debug(ys);
+			debug(rx);
+			debug(ry);
+#endif
+			ANSs.eb(mp(xs, ys), mp(rx, ry));
 		}
 	}
-	return same;
-
 }
 
-bool check(){
+void check(){
 	for(int yi = 0; yi < 2; yi++){
 		int ry = (yi == 0 ? 10 : -10);
 		for(int rx = -10; rx <= 10; rx++){
 			vector<Point<int>> rotated(3);	
 			rotation(rx, ry, rotated);
+#ifdef Drotate
 			debug(rx);
 			debug(ry);
 			cout << "rotated: ";
 			PrintVec(rotated);
-			if(transcale(rotated))
-				return true;
+#endif
+			transcale(rotated, rx, ry);
 		}
 	}
 	for(int xi = 0; xi < 2; xi++){
 		int rx = (xi == 0 ? 10 : -10);
-		for(int ry = -10; ry <= 10; ry++){
+		for(int ry = -9; ry <= 9; ry++){
 			vector<Point<int>> rotated(3);	
 			rotation(rx, ry, rotated);
+#ifdef Drotate
 			debug(rx);
 			debug(ry);
 			cout << "rotated: ";
 			PrintVec(rotated);
-			if(transcale(rotated))
-				return true;
+#endif
+			transcale(rotated, rx, ry);
 		}
 	}
-	return false;
 }
 
 int main(){
@@ -288,20 +353,39 @@ int main(){
 			cin >> to[i];
 			mto[i] = i;
 		}
+#ifdef Dinput
 		cout << "from: ";
 		PrintVec(from);
 		cout << "to : ";
 		PrintVec(to);
-		int sol = 0;
+#endif
+		ANSs.clear();
 		do{
+			#ifdef Dtry
 			cout << "trying : ";
 			for(int i = 0 ;i < 3; i++)
 				cout << i << " to " << mto[i] << ", ";
 			cout << endl;
-			if(check()){
-				sol++;
-			}		
+#endif
+			check();
 		}while(next_permutation(al(mto)));
+		vector<bool> valid(ANSs.size(), true);
+		for(int i = 0; i < ANSs.size(); i++){
+			if(valid[i] == false) continue;
+			for(int j = i; j < ANSs.size(); j++){
+				if(ANSs[i].F.F + ANSs[j].F.F == 0 &&
+					ANSs[i].F.S + ANSs[j].F.S == 0 &&
+					ANSs[i].S.F + ANSs[j].S.F == 0 &&
+					ANSs[i].S.S + ANSs[j].S.S == 0){
+					valid[j] = false;
+				}
+			}
+		}
+		int sol = 0;
+		for(int i = 0; i < valid.size(); i++){
+			if(valid[i]) sol++;
+		}
+
 		cout<< "Case " << caseN++ << ": ";
 		if(sol == 1){
 			cout << "equivalent solutions";
