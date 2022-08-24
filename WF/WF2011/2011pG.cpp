@@ -1,6 +1,7 @@
 // debuging binary search
 #include <bits/stdc++.h>
 using namespace std;
+
 #define REP(i, n) for(int i = 0; i < (int)n; i++)
 #define REP1(i, n) for(int i = 1; i <= (int)n; i++)
 #define debug(x) cout << #x << ": " << x << endl;
@@ -8,19 +9,24 @@ using namespace std;
 #define F first
 #define S second
 #define al(x) x.begin(), x.end()
+
 using ll = long long;
 using pii = pair<int, int>;
 using pll = pair<ll, ll>;
+
 const double eps = 1e-15;
 const double eps2 = 0;
+
 int fcmp(double a, double b){
 	if(abs(a-b) < eps)
 		return 0;
 	return ((a - b) > 0.0) * 2 - 1;
 }
+
 // law of cosine: c^2 = a^2 + b^2 - 2abcos(theta)
 vector<int> Vs;
 vector<double> rad;
+
 int checkRad(int l, int r, int longest, double R){
 	double t = 2*R*R;
 	double radSum = 0.0;
@@ -28,14 +34,14 @@ int checkRad(int l, int r, int longest, double R){
 	if(fcmp(R*2, Vs[longest]) < 0){
 		return 0;
 	}
-	for(int i = l; i <= r; i++){
+	for (int i = l; i <= r; i++){
 		rad[i] = acos((t - Vs[i]*Vs[i]) / t);
 		if(i == longest){
 			lngrad = rad[i];
 		}
 		radSum += rad[i];	
 	}
-	if(fcmp(radSum - lngrad, M_PI - eps2) >= 0){ // superior
+	if (fcmp(radSum - lngrad, M_PI - eps2) >= 0) { // superior
 #ifdef Dcheck
 		cout << "case1\n";
 		debug(radSum);

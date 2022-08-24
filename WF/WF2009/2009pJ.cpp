@@ -11,13 +11,13 @@ const int inf = 1000000;
 int N;
 vector<vector<pair<int, int>>> G;
 vector<vector<int>> f;
-int validD;
+int D;
 bool valid(int val){
-	return val>= -validD && val <= validD;
+	return val>= -D && val <= D;
 }
 
 void DFS(int u, int pa, int D){
-	if((pa != -1 && G[u].size() == 1)|| G[u].size() == 0){
+	if(/*(pa != -1 && G[u].size() == 1)||*/ G[u].size() == 0){
 		fill(f[u].begin(), f[u].end(), 0);
 		return;
 	}
@@ -115,7 +115,7 @@ bool verify(int D){
 #ifdef Dverify
 	cout << "pick : " << D << endl; 
 #endif
-	validD = D;
+	D = D;
 	for(int u = 0; u < N; u++){
 		f[u].resize(6001);
 		fill(al(f[u]), inf);
