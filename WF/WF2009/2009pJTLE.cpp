@@ -31,8 +31,9 @@ void DFS(int u, int pa){
 	if (G[u].size() == 1 && u != pa) {
 		for(vector<int>&vf: f[u])
 			fill(al(vf), 1);
-		#ifdef Ddp
+#ifdef Ddp
 		cout << u << " is leaf\n";
+		cout << u << " done.\n";
 #endif
 		return;
 	}
@@ -49,6 +50,14 @@ void DFS(int u, int pa){
 	vec<vec<int>> &rf = f[v]; 
 	for(int i = 0; i <= D; i++){
 		for(int j = 0; j <= D; j++){
+			if(j > 0 && cf[i][j-1] == true){
+				cf[i][j] = true;
+				continue;
+			}
+			if(i > 0 && cf[i-1][j] == true){
+				cf[i][j] = true;
+				continue;
+			}
 			int ri = i - w, rj = j + w;
 			if(valid(ri) && valid(rj)){
 				cf[i][j] |= rf[ri][rj];
@@ -61,7 +70,9 @@ void DFS(int u, int pa){
 	}
 #ifdef Ddp
 	cout << "do with " << v << endl;
-	for(int i = 0; i <= min(65, D); i++){
+	debug(w);
+	for (int i = 0; i <= min(65, D); i++)
+	{
 		for(int j = 0; j <= min(65, D); j++){
 			cout << f[u][i][j] << " ";
 		}
@@ -75,62 +86,89 @@ void DFS(int u, int pa){
 		tie(v, w) = neigh;
 		if(v == pa || v == pv)
 			continue;
-#ifdef Ddp
-		cout << "do with " << v << endl;
-#endif
 		vec<vec<int>> &lf = f[v];
 		vec<vec<int>> rf = cf; // treat tf as right subtree, R subtree always round down (0 -> 0);
 		fillv(cf, 0);
 			
-		for(int i = 0; i <= D; i++){
-			for(int j = 0; j <= D; j++){
-				if (true)
-				{
+		for (int i = 0; i <= D; i++) {
+			for (int j = 0; j <= D; j++) {
+				if(j > 0 && cf[i][j-1] == true){
+					cf[i][j] = true;
+					continue;
+				}
+				if(i > 0 && cf[i-1][j] == true){
+					cf[i][j] = true;
+					continue;
+				}
+				for (int round = 0; round < 2; round++) {
+					if (round)
+						w -= 60; // for case 2
 					// case 1-1  L round down, R round down, i by L, j by L
 					int li = i - w, lj = j + w;
-					int ri = min(D-i, i), rj = min(D-j, j);
+					int ri = min(D - i, i), rj = min(D - j, j);
 					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
 						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
 					// case 1-2  L round down, R round down, i by L, j by R
-					li = i - w, lj = min(D-j, j) + w;
+					li = i - w, lj = min(D - j, j) + w;
 					ri = min(D - i, i), rj = j;
 					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
 						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
 					// case 1-3  L round down, R round down, i by R, j by L
-					li = min(D-i, i) - w, lj = j + w;
-					ri = i, rj = min(D-j, j);
+					li = min(D - i, i) - w, lj = j + w;
+					ri = i, rj = min(D - j, j);
 					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
 						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
 					// case 1-4  L round down, R round down, i by R, j by R 
-					li = min(D-i, i) - w, lj = min(D-j, j) + w;
+					li = min(D - i, i) - w, lj = min(D - j, j) + w;
 					ri = i, rj = j;
 					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
 						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
 				}
-				if(true){
-					// case 2-1  L round up, R round down, i by L, j by L
-					int li = i + (60 - w), lj = j - (60 - w);
-					int ri = min(D-i, i), rj = min(D-j, j);
-					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
-						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
-					// case 2-2  L round up, R round down, i by L, j by R
-					li = i + (60 - w), lj = min(D-j, j) - (60 - w);
-					ri = min(D - i, i), rj = j;
-					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
-						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
-					// case 2-3  L round up, R round down, i by R, j by L 
-					li = min(D-i, i) + (60 - w), lj = j - (60 - w);
-					ri = i, rj = min(D-j, j);
-					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
-						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
-					// case 2-4  L round up, R round down, i by R, j by R 
-					li = min(D-i, i) + (60 - w), lj = min(D-j, j) - (60 - w);
-					ri = i, rj = j;
-					if (valid(li) && valid(lj) && valid(ri) && valid(rj))
-						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
+				w += 60;
+/*
+				if(j > 0 && cf[i][j] == false && cf[i][j-1] == true){
+					cout << i << ", " << j << " weird.\n";
+					debug(D);
+					debug(w);
+					for (int round = 0; round < 2; round++) {
+						if (round){
+							w -= 60; // for case 2
+							debug(w);
+						}
+						int li = i - w, lj = j + w;
+						int ri = min(D - i, i), rj = min(D - j, j);
+						debug(li);
+						debug(lj);
+						debug(ri);
+						debug(rj);
+						li = i - w, lj = min(D - j, j) + w;
+						ri = min(D - i, i), rj = j;
+						debug(li);
+						debug(lj);
+						debug(ri);
+						debug(rj);
+						li = min(D - i, i) - w, lj = j + w;
+						ri = i, rj = min(D - j, j);
+						debug(li);
+						debug(lj);
+						debug(ri);
+						debug(rj);
+						li = min(D - i, i) - w, lj = min(D - j, j) + w;
+						ri = i, rj = j;
+						debug(li);
+						debug(lj);
+						debug(ri);
+						debug(rj);
+					}
+					w += 60;
 				}
+*/
 			}
 		}
+#ifdef Ddp
+		cout << "do with " << v << endl;
+		debug(60 + w);
+#endif
 #ifdef Ddp
 		for(int i = 0; i <= min(65,D); i++){
 			for(int j = 0; j <= min(65,D); j++){
@@ -141,7 +179,9 @@ void DFS(int u, int pa){
 		cout << endl;
 #endif
 	}
-//	}
+#ifdef Ddp
+	cout << u << " done.\n";
+#endif
 }
 
 bool verify() {
