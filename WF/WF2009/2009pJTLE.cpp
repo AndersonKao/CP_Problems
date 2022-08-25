@@ -1,3 +1,5 @@
+// this gets TLE without the knowledge of upper bound of D is 200
+//
 #include<bits/stdc++.h>
 using namespace std;
 #define eb emplace_back
@@ -209,12 +211,6 @@ bool verify() {
 		cout << endl;
 	}
 #endif
-	for (int i = 0; i <= D; i++){
-		for (int j = 0; j <= D; j++){
-			if(f[0][i][j])
-				return true;
-		}
-	}
 	return f[0][D][D];
 }
 
