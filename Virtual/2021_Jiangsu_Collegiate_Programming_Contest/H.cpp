@@ -31,6 +31,9 @@ void rhash_init(string str){
 		rh[i] = (rh[i-1] * prime + str[i-1]) % prime_mod;
 	}
 }
+bool check(int idx){
+		
+}
 
 int main(){
 	h_base[0] = 1;
@@ -55,7 +58,19 @@ int main(){
 		int curans = st;
 		int ed = st + 1;
 		while(ed < str.length()){
-			
+			int l = 0, r = str.length()-1;		
+			while(l < r){
+				int m = (l+r)>>1;
+				if(check(m, st, ed)){
+					l = m+1;
+				}
+				else{
+					r = m;
+				}
+			}
+			// l = first difference
+
+
 		}
 		
 	}
