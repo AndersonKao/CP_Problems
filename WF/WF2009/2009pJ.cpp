@@ -6,126 +6,121 @@ using namespace std;
 #define al(x) x.begin(), x.end()
 #define debug(x) cout << #x << ": " << x << endl;
 using pii = pair<int, int>;
+template <typename T>
+using vec = vector<T>;
 const int inf = 1000000;
 
 int N;
 vector<vector<pair<int, int>>> G;
 vector<vector<int>> f;
 int D;
+bool validposi(int val){
+	return val >= 0 && val <= D;
+}
 bool valid(int val){
-	return val>= -D && val <= D;
+	return val <= D;
 }
 
-void DFS(int u, int pa, int D){
-	if(/*(pa != -1 && G[u].size() == 1)||*/ G[u].size() == 0){
+void DFS(int u, int pa){
+#ifdef DDFS
+	cout << "proc " << u << endl;
+#endif
+	if(pa != u && G[u].size() == 1){
 		fill(f[u].begin(), f[u].end(), 0);
+#ifdef DDFS
+		cout << u << " done.\n";
+#endif
 		return;
 	}
 	
 	for(pii v: G[u]){
 		if(v.F == pa) continue;
-			DFS(v.F, u, D);
+			DFS(v.F, u);
 	}
-#ifdef DDFS
-	cout << "proc " << u << endl;
-#endif
+	int v, w;
+	tie(v, w) = (G[u][0].F == pa && G[u].size() > 1 ? G[u][1] : G[u][0]);
+
 	vector<int>& cf = f[u];
-	fill(al(cf), inf);
-	int v = (G[u][0].F == pa ? G[u][1].F : G[u][0].F);
-	int w = (G[u][0].F == pa ? G[u][1].S : G[u][0].S);
-	vector<int> &lv = f[v];
+	vector<int>& rf = f[v];
+
 	for(int i = 0; i <= D; i++){
 		// round up
-		int li = i - w;
-		if(li >= 0 && valid(lv[li]) && valid(lv[li] - w)){
-			cf[i] = min(lv[li] - w, cf[i]);
+		if(i > 0)
+			cf[i] = min(cf[i], cf[i - 1]);
+		for (int round = 0; round < 2; round++)
+		{
+			if(round)// round up 
+				w -= 60;
+			int ri = i - w;
+			if(validposi(ri) && valid(rf[ri] - w)){
+				cf[i] = min(max(0,rf[ri] - w), cf[i]);
+			}
 		}
-#ifdef Dli
-		debug(li);
-		if(li >= 0){
-			if(lv[li] > D)
-				cout << "li val outofrange\n";
-		}
-		else		
-			cout << "li outofrange\n";
-#endif
-		// round down
-			li = i + 60 - w;
-		if(w != 0 && li <= D && valid(lv[li]) && valid(lv[li] + 60 - w)){ // li <= D is not need since the solution is not necessary be D
-			cf[i] = min(lv[li] + (60 - w), cf[i]);
-		} 
-#ifdef Dli
-		if(li <= D){
-			if(lv[li] > D)
-				cout << "li val outofrange\n";
-		}
-		else		
-			cout << "li outofrange\n";
+		w += 60;
+#ifdef Ddp
+		if(cf[i] > D)
+			cout << "li val outofrange\n";
 #endif
 	}
+	int pv = v;
+	for(pii& neigh : G[u]){
+		int v, w;
+		tie(v, w) = neigh;
+		if(v == pa || v == pv)
+			continue;
 #ifdef Ddp
-	cout << "do with " << v << endl;
-	for(int i = 0; i < 100; i++){
+		cout << "do with " << v << endl;
+#endif
+		vector<int> &lf = f[v];
+		vec<int> rf = cf; // treat tf as right subtree, R subtree always round up (0-> 0);
+		fill(al(cf), inf);
+		for(int i =0; i <= D; i++){
+			if(i > 0)
+				cf[i] = min(cf[i], cf[i - 1]);
+			for (int round = 0; round < 2; round++){
+				if(round)
+					w -= 60;
+				// case 1-1  L round up, R round up, i by L
+				int li = i - w, ri = min(D - i, i);
+				if(validposi(li) && valid(lf[li]-w) && valid(lf[li] - w + rf[ri]))
+					cf[i] = min(max({lf[li] - w, rf[ri], 0}), cf[i]);
+				// case 1-2  L round up, R round up, i by R 
+				li = min(D-i, i) - w, ri = i;
+				if(validposi(li) && valid(lf[li]-w) && valid(lf[li] - w + rf[ri]))
+					cf[i] = min(max({lf[li] - w, rf[ri], 0}), cf[i]);
+			}
+			w += 60;
+		}
+	}
+#ifdef Ddp
+	cout << "table " << u << ": ";
+	for (int i = 0; i < min(100, D); i++)
+	{
 		cout << f[u][i] << " ";
 	}
 		cout << endl;
 #endif
-	int pv = v;
-	vector<int> tf(cf.size());
-//	if(G[u].size() > (2 + (pa == -1 ? -1 : 0))){
-		for(pii& neigh : G[u]){
-			int v = neigh.F, w = neigh.S;
-			if(v == pa || v == pv)
-				continue;
-#ifdef Ddp
-			cout << "do with " << v << endl;
+#ifdef DDFS
+	cout << u << " done.\n";
 #endif
-			tf = cf; // treat tf as right subtree, R subtree always round up (0-> 0);
-			fill(al(cf), inf);
-			vector<int> &lf = f[v];
-			for(int i =0; i <= D; i++){
-				// case 1-1  L round up, R round up, i by L
-				int li = i-w, ri = min(D-i, i);
-				if(li >= 0 && li <= D && ri >= 0 && ri <= D && valid(lf[li]) && valid(tf[ri]) && valid(lf[li]-w) &&valid(lf[li] - w + tf[ri]))
-					cf[i] = min(max(lf[li] - w, tf[ri]), cf[i]);
-				// case 1-2  L round up, R round up, i by R 
-				li = min(D-i, i) - w, ri = i;
-				if(li >= 0 && li <= D && ri >= 0 && ri <= D && valid(lf[li]) && valid(tf[ri]) && valid(lf[li]-w) &&valid(lf[li] - w + tf[ri]))
-					cf[i] = min(max(lf[li] - w, tf[ri]), cf[i]);
-				// case 3-1  L round down, R round up, i by L
-				li = i + 60 - w, ri = min(D-i, i);
-				if(w != 0 && li >= 0 && li <= D && ri >= 0 && ri <= D && valid(lf[li]) && valid(tf[ri]) && valid(lf[li] +60 -w) &&valid(lf[li] + 60 - w + tf[ri]))
-					cf[i] = min(max(lf[li] + (60 - w), tf[ri]), cf[i]);
-				// case 3-2  L round down, R round up, i by R
-				li = min(D-i, i) + 60 - w, ri = i;
-				if(w != 0 && li >= 0 && li <= D && ri >= 0 && ri <= D && valid(lf[li]) && valid(tf[ri]) && valid(lf[li] +60 -w) &&valid(lf[li] + 60 - w + tf[ri]))
-					cf[i] = min(max(lf[li] + (60 - w), tf[ri]), cf[i]);
-			}
-#ifdef Ddp
-			for(int i = 0; i < 100; i++){
-				cout << f[u][i] << " ";
-			}
-			cout << endl;
-#endif
-		}
-//	}
 }
 
-bool verify(int D){
+bool verify(){
 #ifdef Dverify
 	cout << "pick : " << D << endl; 
 #endif
-	D = D;
 	for(int u = 0; u < N; u++){
-		f[u].resize(6001);
+		f[u].resize(D+1);
 		fill(al(f[u]), inf);
 	}
-	DFS(0, -1, D);	
+	if(G[0].size() == 0)
+		return true;
+	DFS(0, 0);
 #ifdef Dverify
 	cout << "verify: \n";
 	for(int u = 0; u < N; u++){
 		cout << u << " verifying " << endl;
-		for(int i = 0; i < 100; i++){
+		for(int i = 0; i < min(100, D); i++){
 			cout << f[u][i] << " ";
 		}
 		cout << endl;
@@ -150,23 +145,23 @@ int main(){
 			int u, v;
 			int t;
 			cin >> u >> v >> t;
-			t = (60 - (t % 60)) % 60;
+			t = t % 60;
 			u--, v--;
 			G[u].eb(v, t);
 			G[v].eb(u, t);
 		}
 		int L = 0, R = 6000;
 		while(L < R){
-			int M = (L+R) >> 1;
+			D = (L+R) >> 1;
 #ifdef Dbi
 			cout << "L: " << L << ", R: " << R << endl;
 #endif
-			if(verify(M)){
-				R = M;
+			if(verify()){
+				R = D;
 			}
 			else{
-					L = M + 1;
-				}
+				L = D + 1;
+			}
 		}
 #ifdef Dbi
 		cout << L <<endl;

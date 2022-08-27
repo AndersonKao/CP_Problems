@@ -48,8 +48,8 @@ void DFS(int u, int pa){
 	int v, w;
 	tie(v, w) = ((G[u][0].F == pa && G[u].size() > 1) ? G[u][1] : G[u][0]);
 	
-	vec<vec<int>> &cf = f[u]; 
-	vec<vec<int>> &rf = f[v]; 
+	vec<vec<int>>& cf = f[u]; 
+	vec<vec<int>>& rf = f[v]; 
 	for(int i = 0; i <= D; i++){
 		for(int j = 0; j <= D; j++){
 			if(j > 0 && cf[i][j-1] == true){
@@ -127,44 +127,6 @@ void DFS(int u, int pa){
 						cf[i][j] |= (lf[li][lj] && rf[ri][rj]);
 				}
 				w += 60;
-/*
-				if(j > 0 && cf[i][j] == false && cf[i][j-1] == true){
-					cout << i << ", " << j << " weird.\n";
-					debug(D);
-					debug(w);
-					for (int round = 0; round < 2; round++) {
-						if (round){
-							w -= 60; // for case 2
-							debug(w);
-						}
-						int li = i - w, lj = j + w;
-						int ri = min(D - i, i), rj = min(D - j, j);
-						debug(li);
-						debug(lj);
-						debug(ri);
-						debug(rj);
-						li = i - w, lj = min(D - j, j) + w;
-						ri = min(D - i, i), rj = j;
-						debug(li);
-						debug(lj);
-						debug(ri);
-						debug(rj);
-						li = min(D - i, i) - w, lj = j + w;
-						ri = i, rj = min(D - j, j);
-						debug(li);
-						debug(lj);
-						debug(ri);
-						debug(rj);
-						li = min(D - i, i) - w, lj = min(D - j, j) + w;
-						ri = i, rj = j;
-						debug(li);
-						debug(lj);
-						debug(ri);
-						debug(rj);
-					}
-					w += 60;
-				}
-*/
 			}
 		}
 #ifdef Ddp
