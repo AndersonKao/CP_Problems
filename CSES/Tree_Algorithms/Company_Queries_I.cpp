@@ -7,9 +7,6 @@ using namespace std;
 
 int N, Q;
 vector<vector<int>> pa;
-void buildLCA(){
-
-}
 
 int main(){
     cin.tie(0);
@@ -41,11 +38,9 @@ int main(){
     for (int i = 0; i < Q; i++){
         cin >> u >> jump;
         int ans = u - 1;
-        while(jump && ans != -2){
-            int bit = jump & (-jump);
-            jump -= bit;
-            //cout << "jump: " << bit << ", " << jump << ", " << ans + 1  << endl;
-            ans = pa[ans][__lg(bit)];
+				for(int j = 0; j < Len; j++){
+					if(ans != -2 && jump & (1 << j))
+            ans = pa[ans][j];
         }
         cout << (ans + 1) << endl;
     }

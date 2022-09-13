@@ -15,7 +15,7 @@ using pll = pair<ll, ll>;
 int N;
 const double eps = 1e-12;
 const double teps = 1e-6;
-const double disINF = 1e20;
+const double disINF = 1e40;
 int fcmp(double a, double b){
 	if(abs(a-b) < eps)	
 		return 0;
@@ -66,20 +66,22 @@ void init(int N){
 	G.resize(N);
 }
 
-tuple<int, int, int> getcoeff(int x1, int vx1, int x2, int vx2){
-	int xoff = (x1 - x2), voff = (vx1 - vx2);
+tuple<double, double, double> getcoeff(int x1, int vx1, int x2, int vx2){
+	double xoff = (x1 - x2), voff = (vx1 - vx2);
 	return make_tuple(voff*voff, 2 * xoff * voff, xoff*xoff);
 }
 double getdis(int i, int j, double t){
+	double xoff, yoff, zoff;
 	if(fcmp(t, 0.0) == 0){
-		int xoff = (pts[i].x - pts[j].x);
-		int yoff = (pts[i].y - pts[j].y);
-		int zoff = (pts[i].z - pts[j].z);
-		return sqrt(xoff * xoff + yoff*yoff + zoff*zoff);
+		xoff = ((ll)pts[i].x - pts[j].x);
+		yoff = ((ll)pts[i].y - pts[j].y);
+		zoff = ((ll)pts[i].z - pts[j].z);
 	}
-	double xoff = (pts[i].x + pts[i].dx * t - (pts[j].x + pts[j].dx * t));
-	double yoff = (pts[i].y + pts[i].dy * t - (pts[j].y + pts[j].dy * t));
-	double zoff = (pts[i].z + pts[i].dz * t - (pts[j].z + pts[j].dz * t));
+	else{
+		xoff = (pts[i].x + pts[i].dx * t - (pts[j].x + pts[j].dx * t));
+		yoff = (pts[i].y + pts[i].dy * t - (pts[j].y + pts[j].dy * t));
+		zoff = (pts[i].z + pts[i].dz * t - (pts[j].z + pts[j].dz * t));
+	}
 	return sqrt(xoff * xoff + yoff*yoff + zoff*zoff);
 }
 
@@ -87,29 +89,41 @@ void getT(int i, int si, int j, int sj, vector<event>& mT){
 #ifdef DgetT
 	printf("getT on (%d, %d) and (%d, %d)\n", i, si, j, sj);
 #endif
-	int Lt2 = 0, Lt = 0, Lc = 0;
-	int t2, t, c;
+	double Lt2 = 0, Lt = 0, Lc = 0;
+	double t2, t, c;
 	tie(t2, t, c) = getcoeff(pts[i].x, pts[i].dx, pts[si].x, pts[si].dx);
 	Lt2 += t2, Lt += t, Lc += c; 
 	tie(t2, t, c) = getcoeff(pts[i].y, pts[i].dy, pts[si].y, pts[si].dy);
 	Lt2 += t2, Lt += t, Lc += c; 
 	tie(t2, t, c) = getcoeff(pts[i].z, pts[i].dz, pts[si].z, pts[si].dz);
 	Lt2 += t2, Lt += t, Lc += c; 
-	int Rt2 = 0, Rt = 0, Rc = 0;
+	double Rt2 = 0, Rt = 0, Rc = 0;
 	tie(t2, t, c) = getcoeff(pts[j].x, pts[j].dx, pts[sj].x, pts[sj].dx);
 	Rt2 += t2, Rt += t, Rc += c; 
 	tie(t2, t, c) = getcoeff(pts[j].y, pts[j].dy, pts[sj].y, pts[sj].dy);
 	Rt2 += t2, Rt += t, Rc += c; 
 	tie(t2, t, c) = getcoeff(pts[j].z, pts[j].dz, pts[sj].z, pts[sj].dz);
 	Rt2 += t2, Rt += t, Rc += c; 
-	int A = (Rt2 - Lt2), B = (Rt - Lt), C = (Rc - Lc);
+	double A = (Rt2 - Lt2), B = (Rt - Lt), C = (Rc - Lc);
 	double T1 = (-B + sqrt(B*B - 4*A*C)) / (2*A);
 	double T2 = (-B - sqrt(B*B - 4*A*C)) / (2*A);
-	if(isnan(T1) == false  && fcmp(T1, 0.0) > 0){
+	if(isnan(T1) == false && !isinf(T1) && fcmp(T1, 0.0) > 0){
 		mT.eb(T1, i, si, j , sj);
+		double curdis_i = getdis(i, si, T1);
+		double curdis_j = getdis(j, sj, T1);
+		if(fcmp(curdis_i, curdis_j) != 0){
+			cout << "time inconsistent\n";
+			debug(T1);
+		}
 	}
-	if(isnan(T2) == false  && fcmp(T2, 0.0) > 0){
+	if(isnan(T2) == false  && !isinf(T2) && fcmp(T2, 0.0) > 0){
 		mT.eb(T2, i, si, j , sj);
+		double curdis_i = getdis(i, si, T2);
+		double curdis_j = getdis(j, sj, T2);
+		if(fcmp(curdis_i, curdis_j) != 0){
+			cout << "time inconsistent\n";
+			debug(T2);
+		}
 	}
 }
 
@@ -188,7 +202,9 @@ void AddEdge(int u, int v){
 
 bool checkMST(event& cur){
 	double curt = cur.t;
-	double pret = curt - teps*2;
+	double pret = curt - teps/2.0;
+	double curdis_i = getdis(cur.i, cur.si, curt);
+	double curdis_j = getdis(cur.j, cur.sj, curt);
 	double predis_i = getdis(cur.i, cur.si, pret);
 	double predis_j = getdis(cur.j, cur.sj, pret);
 #ifdef DcheckM
@@ -196,6 +212,9 @@ bool checkMST(event& cur){
 	debug(predis_i);
 	debug(predis_j);
 #endif
+	if(fcmp(predis_i, predis_j)==0){
+		cout << "pret inconsistent\n";
+	}
 	if(fcmp(predis_i, predis_j) < 0){
 #ifdef DcheckM
 		cout << "i is shorter\n";
@@ -315,7 +334,7 @@ int main(){
 			if(checkMST(e)){
 				ans++;
 #ifdef Dans
-				printf("ans increase %d\n", ans);
+				printf("ans increase %.10lf\n", e.t);
 #endif
 			}
 		}
