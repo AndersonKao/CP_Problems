@@ -1,0 +1,15 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define eb emplace_back
+#define F first
+#define S second
+
+using ll = long long;
+template<typename T> using vec = vector<T>;
+template<typename T> using p = pair<T, T>;
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);
+}
