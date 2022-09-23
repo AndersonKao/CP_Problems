@@ -51,6 +51,18 @@ struct node{
 		}
 	}
 };
+void heapify(node* t){
+	if(!t) return;
+	node* mt = t;
+	if(t->l && t->l->pri > mt->pri)
+		mt = t->l;
+	if(t->r && t->r->pri > mt->pri)
+		mt = t->r;
+	if(mt != t){
+		swap(t->pri, mt->pri);
+		heapify(mt);
+	}
+}
 void Print(node* rt){
 	if(rt){
 		Print(rt->l);
@@ -110,25 +122,28 @@ void insert(node* & rt, node* p, int pos){
 	if(!rt){
 		rt = p;
 	}
-	else if(p->pri < rt->pri){
+	else if(p->pri <= rt->pri){
 		split_by_size(rt, p->l, p->r, pos);
 		rt = p;
 		pull(rt);
 	}
 	else{
-		if(pos >= size(rt->l)+1)
-			insert(rt->r, p, pos - (size(rt->l) + 1));
-		else
+		push(rt);
+		if (pos <= size(rt->l))
 			insert(rt->l, p, pos);
+		else
+			insert(rt->r, p, pos - (size(rt->l) + 1));
+		pull(rt);
 	}
 }
 
+/* insert after $pos$ items. */
 void Insert(node* &rt, int pos, ll val){
 	node* newp = new node(val);	
 	node*a, *b;
-	split_by_size(rt, a, b, pos);
-	rt = merge(a, merge(newp, b));
-//	insert(rt, newp, pos);
+//	split_by_size(rt, a, b, pos);
+//	rt = merge(a, merge(newp, b));
+	insert(rt, newp, pos);
 }
 
 void Delete(node* & rt, int pos){
@@ -143,8 +158,7 @@ ll Query(node* & rt, int l, int r){
 	node* a, *b, *c;
 	split_by_size(rt, a, b, l-1);
 	split_by_size(b, b, c, (r - l + 1));
-	ll ans = 0;
-	ans = b->min_ans; 
+	ll ans = b->min_ans; 
 	rt = merge(a, merge(b, c));
 	return ans;
 }
@@ -168,26 +182,27 @@ void Revolve(node* & rt, int l, int r, int T){
 	split_by_size(b, b1, b2, len - T);
 	rt = merge(a, merge( merge(b2, b1), c) );
 }
+
 void Modify(node* & rt, int l, int r, ll val){
 	node* a, *b, *c;
 	split_by_size(rt, a, b, l-1);
 	split_by_size(b, b, c, (r - l + 1));
-	/*
-	cout << "a: ";
-	Print(a);
-	cout << endl;
-	cout << "b: ";
-	Print(b);
-	cout << endl;
-	cout << "c: ";
-	Print(c);
-	cout << endl;
-	*/
 
 	b->add += val;
 	b->val += val;
 	b->min_ans += val;
 	rt = merge(a, merge(b, c));
+}
+
+node* build(int* a, int n){
+	if(n == 0) return nullptr;
+	int mid = n >> 1;
+	node* t = new node(a[mid]);
+	t->l = build(a, mid);
+	t->r = build(a + mid + 1, n - mid - 1);
+	heapify(t);
+	pull(t);
+	return t;
 }
 
 
@@ -206,10 +221,21 @@ int main(){
 	node* mT = nullptr;
 	REP(i, n){
 		cin >> seq[i];
-		Insert(mT, i+1, seq[i]);
 	}
+	mT = build(seq, n);
 	int m;
 	cin >> m;
+	/*
+	REP(i, 10){
+		int pos = rand() % n;
+		ll val = rand() % 900417;
+		cout << "Insert " << pos << ", " << val << endl;
+		Insert(mT, pos, val);
+		cout << "mT: ";
+		Print(mT);
+		cout << endl;
+	}
+	*/
 	REP(i, m){
 		string op;
 		int pos, l, r, T;
@@ -234,6 +260,11 @@ int main(){
 		else if (op == "INSERT"){
 			cin >> pos >> val;	
 			Insert(mT, pos, val);
+			/*
+			cout << "mT: ";
+			Print(mT);
+			cout << endl;
+			*/
 		}
 		else if (op == "DELETE"){
 			cin >> pos;
