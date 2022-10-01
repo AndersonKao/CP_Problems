@@ -100,5 +100,4 @@ long long Query(int l, int r, int L, int R, int index){
         return Query(l, M, L, M, IL(index)) + 
         Query(M + 1, r, M + 1, R, IR(index));
     }
-
 }
