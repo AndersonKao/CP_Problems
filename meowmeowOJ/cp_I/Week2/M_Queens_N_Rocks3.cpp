@@ -1,3 +1,4 @@
+// AC
 #include <bits/stdc++.h>
 using namespace std;
 #define REP(i, n) for(int i = 0; i < (int)n; i++)
@@ -19,67 +20,34 @@ template<typename T>
 using vec = vector<T>;
 int dia[2][40] = {0}; // 0 for \, 1 for /
 int hasrock[2][40] = {0}; // 0 for \, 1 for /
-int occr[20] = {0};
+int occu[20] = {0};
 ll ans = 0;
 int Anum, Bnum;
 int N;
 int MASK;
-vec<p<int>> RowV;
 inline int lowbit(int x){
-	return x & (~x + 1);
+	return (x & (~x + 1));
 }
-void dfs2(int r, int b, int M){
+
+void dfs(int r, int a, int b, int L, int M, int R, int qL, int qM, int qR){
 	if(r == N){
-			ans++;
+		ans++;
 		return;
 	}
-	if(occr[r]){
-		dfs2(r+1, b, M);
-	}
-	else{
-		int validmask = (~M & MASK);
+	if(a < Anum){
+		int validmask = (~(L | M | R | qL | qM | qR)) & MASK;
 		for(int res; validmask; validmask ^= res){
 			res = lowbit(validmask);
-			int c = __lg(res);
-			int diaid = r + c + 1;
-			if(dia[1][diaid]) continue;
-			int backdia = r + (N - c - 1) + 1;
-			if(dia[0][backdia]) continue;
-			// else push Rock
-			dfs2(r+1, b+1, M | res);
+			dfs(r+1, a+1, b, (L | res) << 1, M | res, (R | res) >> 1, qL << 1, qM, qR >> 1);
 		}
 	}
-}
-void dfs(int r, int a, int L, int M , int R){
-	if(Anum - a > N - r){
-		return;
-	}
-	if(r == N){
-		if(Bnum != 0){
-			dfs2(0, 0, M);
-		}
-		else{
-			ans++;
-		}
-		return;
-	}
-//	debug(r);
-	dfs(r+1, a, L << 1, M, R >> 1);
-	occr[r] = 1;
-	if(a < Anum){
-//		cout << "push queen\n";
+	if(b < Bnum){ // put rock
 		int validmask = (~(L | M | R)) & MASK;
 		for(int res; validmask; validmask ^= res){
 			res = lowbit(validmask);
-			int c = __lg(res);
-			int diaid = r + c + 1;
-			int backdia = r + (N - c - 1) + 1;
-			dia[0][backdia] = dia[1][diaid] = 1;
-			dfs(r+1, a+1, (L | res) << 1, M | res, (R | res) >> 1);
-			dia[0][backdia] = dia[1][diaid] = 0;
+			dfs(r+1, a, b + 1, L << 1, M | res, R >> 1, (qL | res) << 1, qM | res, (qR | res) >> 1);
 		}
 	}
-	occr[r] = 0;
 }
 int main(){
 	int T;
@@ -96,11 +64,15 @@ int main(){
 		}
 		else{
 			N = Anum + Bnum;
+			/*
+			for(int i = 0; i < N; i++){
+				cout << i << ": " << lowbit(i) << "   " << __lg(lowbit(i)) << endl;
+			}
+			*/
 			MASK = (1 << N) - 1;
-			dfs(0, 0, 0, 0, 0);
+			dfs(0, 0, 0, 0, 0, 0, 0, 0, 0);
 		}
 		cout << ans << endl;
 	}
 	return 0;
 }
-

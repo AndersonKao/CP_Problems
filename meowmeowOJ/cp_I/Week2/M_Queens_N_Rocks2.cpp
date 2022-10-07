@@ -21,43 +21,34 @@ int dia[2][40] = {0}; // 0 for \, 1 for /
 int hasrock[2][40] = {0}; // 0 for \, 1 for /
 int occu[20] = {0};
 ll ans = 0;
-int M, N;
-void dfs(int r, int Q, int R){
-	if(r == M+N){
+int Anum, Bnum;
+int N;
+int MASK;
+inline int lowbit(int x){
+	return (x & (~x + 1));
+}
+
+void dfs(int r, int a, int b, int L, int M, int R/*, int qL, int qM, int qR*/){
+	if(r == N){
 		ans++;
 		return;
 	}
-	for(int k = r; k < M+N; k++){
-		int t = 0;
-		for(int c = 0; c < M+N; c++){
-			if(occu[c]) continue;
-			int diaid = k + c + 1;
-			if(dia[1][diaid]) continue;
-			int backdia = k + (M+N - c - 1) + 1;
-			if(dia[0][backdia]) continue;
-			t++;	
-		}
-		if(t == 0) return;
-	}
-	for(int c = 0; c < M+N; c++){
-		if(occu[c]) continue;
+	int validmask = (~(L | M | R)) & MASK;
+//	cout << bitset<20>(validmask) << endl;
+	int res;
+	for(;validmask; validmask ^= res){
+		res = lowbit(validmask);
+		int c = N - __lg(res) - 1;
 		int diaid = r + c + 1;
-		if(dia[1][diaid]) continue;
-		int backdia = r + (M+N - c - 1) + 1;
-		if(dia[0][backdia]) continue;
+		int backdia = r + (N - c - 1) + 1;
 		// push Queen
-		if(Q < M && hasrock[0][backdia] == 0 && hasrock[1][diaid] == 0){
-			occu[c] = dia[0][backdia] = dia[1][diaid] = 1;
-			dfs(r+1, Q+1, R);
-			occu[c] = dia[0][backdia] = dia[1][diaid] = 0;
+		if(a < Anum && hasrock[0][backdia] == 0 && hasrock[1][diaid] == 0){
+			dfs(r+1, a+1, b, (L | res) << 1, M | res, (R | res) >> 1);
 		}
-		if(R < N){
-			// else push Rock
-			occu[c] = 1;
+		if(b < Bnum){	// push Rock
 			hasrock[0][backdia]++;
 			hasrock[1][diaid]++;
-			dfs(r+1, Q, R+1);
-			occu[c] = 0;
+			dfs(r+1, a, b + 1, L << 1, M | res, R >> 1);
 			hasrock[0][backdia]--;
 			hasrock[1][diaid]--;
 		}
@@ -68,15 +59,24 @@ int main(){
 	cin >> T;
 	while(T--){
 		ans = 0;
-		cin >> M >> N;
-		if(M == 0){
+		cin >> Anum >> Bnum;
+//		cout << "case: " << Anum << ", " << Bnum << endl;
+		if(Anum == 0){
 			ans = 1;	
-			REP1(i, N){
+			REP1(i, Bnum){
 				ans *= i;
 			}
 		}
-		else
-			dfs(0, 0, 0);
+		else{
+			N = Anum + Bnum;
+			/*
+			for(int i = 0; i < N; i++){
+				cout << i << ": " << lowbit(i) << "   " << __lg(lowbit(i)) << endl;
+			}
+			*/
+			MASK = (1 << N) - 1;
+			dfs(0, 0, 0, 0, 0, 0/*, 0, 0, 0*/);
+		}
 		cout << ans << endl;
 	}
 	return 0;
