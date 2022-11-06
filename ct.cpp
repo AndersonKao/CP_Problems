@@ -9,6 +9,8 @@ using namespace std;
 #define F first
 #define S second
 #define al(x) x.begin(), x.end()
+#define mp make_pair
+#define yccc cin.tie(0), ios_base::sync_with_stdio(false)
 using ll = long long;
 using pii = pair<int, int>;
 using pll = pair<ll, ll>;
@@ -19,7 +21,7 @@ template<typename T>
 using vec = vector<T>;
 
 int main(){
-		
+	yccc;		
 	return 0;
 }
 
