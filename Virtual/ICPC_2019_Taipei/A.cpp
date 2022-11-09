@@ -1,4 +1,3 @@
-
 #include <bits/stdc++.h>
 using namespace std;
 #define REP(i, n) for(int i = 0; i < (int)n; i++)
@@ -34,34 +33,34 @@ int cnt1 = 0;
 bool Validit(const string & cur){
 	int idx = 3 * width - 1;	
 	for(int i = 0; i < cnt1; i++)
-		if(cur[idx-i] != '1')
+		if(cur[idx-i] != 'b')
 			return false;
 	return true;
 }
 inline bool getcid(int i, int idx, int mtype, int& cid){
-	int rem = i % width, mul = i / width;
+	int col = i % width, row = i / width;
 	if(type[idx] == 1){
 		if(mtype == 0){
-			if(rem == 0)
+			if(col == 0)
 				return false;
-			cid = (rem - 1) + mul * width;
+			cid = (col - 1) + row * width;
 		}		
 		else{
-			if(rem == width - 1)
+			if(col == width - 1)
 				return false;
-			cid = (rem + 1) + mul * width;
+			cid = (col + 1) + row * width;
 		}
 	}
 	else{
 		if(mtype == 0){
-			if(mul == 0)
+			if(row == 0)
 				return false;
-			cid = (mul - 1) * width + rem;	
+			cid = (row - 1) * width + col;	
 		}
 		else{
-			if(mul == width-1)
+			if(row == width-1)
 				return false;
-			cid = (mul + 1) * width + rem;	
+			cid = (row + 1) * width + col;	
 		}
 	}
 	return true;
@@ -69,18 +68,18 @@ inline bool getcid(int i, int idx, int mtype, int& cid){
 bool move(const string& cur, string& next, int idx, int mtype){
 	next = cur;
 	for(int i = 0; i < width * width; i++){
-		if(cur[i] - '0' == idx){
+		if(cur[i] - 'a' == idx){
 			int cid;
-			if(! getcid(i, idx, mtype, cid) )
+			if( !getcid(i, idx, mtype, cid) )
 				return false;
-			int val = cur[cid] - '0';
+			int val = (cur[cid] - 'a');
 			if(val != 0 && val != idx)
 				return false;
-			next[i] = '0';
+			next[i] = 'a';
 		}
 	}
 	for(int i = 0; i < width * width; i++){
-		if(cur[i] - '0' == idx){
+		if(cur[i] - 'a' == idx){
 			int cid = -1;
 			getcid(i, idx, mtype, cid);
 			next[cid] = cur[i];
@@ -104,13 +103,13 @@ int main(){
 	bool badinput = false;
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < width; j++){
-			char ch;
-			cin >> ch;
-			init += (ch);
-			n = max(n, ch-'0');
-			if(ch == '1' && i != 2)
+			int x;
+			cin >> x;
+			init += char('a' + x);
+			n = max(n, x);
+			if(x == 1 && i != 2)
 				badinput = true;
-			if(ch == '1')
+			if(x == 1)
 				cnt1++;
 		}
 	}
@@ -120,7 +119,7 @@ int main(){
 	}
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < width; j++){
-			int idx = init[i*width + j] - '0';
+			int idx = (init[i*width + j] - 'a');
 			int id = i * width + j;
 			if( type[idx] == 0 ){
 				for(int did = 0; did < 4; did++){
@@ -149,23 +148,24 @@ int main(){
 	vis.emplace(init);
 	mQ[0].emplace(init);
 	string next, cur;
-	while(!sol && step < 10 - cnt1 && mQ[0].size()){
+	if( Validit(init) ){
+		sol = true;
+	}
+	while(!sol && step+1 <= 10 - cnt1 && mQ[0].size()){
 		step++;
 //		cout << "step: " << step << endl;
 		while(mQ[0].size() && !sol){
 			cur = mQ[0].front(); mQ[0].pop();
 			/*
 			cout << "front: \n";
-			printit(cur);
-			*/
+			printit(cur);*/
 			for(int idx = 1; idx <= n && !sol; idx++){
 				for(int mtype  = 0; mtype <= 1 && !sol; mtype++){
-					if (move(cur, next, idx, mtype)){
+					if ( move(cur, next, idx, mtype) ){
 //						cout << "gen " << next << endl;
-						if(vis.find(next) == vis.end()){ 
-							if( (sol = Validit(next)) ){
-								break;
-							}
+						if( vis.find(next) == vis.end() ){ 
+							sol = Validit(next);
+
 							vis.emplace(next);
 							mQ[1].emplace(next);
 						}
