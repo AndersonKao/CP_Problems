@@ -50,7 +50,7 @@ bool check(int K){
 // Right Part
 	while(pq.size()) pq.pop();
 
-	for(int j = n; j> 2*K; j--){
+	for(int j = n; j > 2*K; j--){
 		pq.emplace(pval[j], j);
 	}
 	for(int i = 2*K; i > K; i--){

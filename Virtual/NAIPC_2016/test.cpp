@@ -20,10 +20,8 @@ using p = pair<T, T>;
 template<typename T>
 using vec = vector<T>;
 
-const double eps = 1e-12;
 using cd = complex<double>;
 const double PI = acos(-1);
-
 
 int reverse(int num, int lg_n) {
     int res = 0;
@@ -84,39 +82,31 @@ vector<int> multiply(vector<int> const& a, vector<int> const& b) {
     vector<int> result(n);
     for (int i = 0; i < n; i++)
         result[i] = round(fa[i].real());
-/* add this for multiplying two long numbers
+// add this for multiplying two long numbers
     int carry = 0;
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++){
         result[i] += carry;
         carry = result[i] / 10;
         result[i] %= 10;
     }
-*/
     return result;
 }
+char sa[20000], sb[20000];
 
 int main(){
-	yccc;
-	string str;
-	cin >> str;
-	int len = str.length();
-	int n = (len - 1) * 2 + 1; // highest X^k, k = len-1, +1 for x^0-term
-		
-	vec<int> Ax(n, 0), Bx(n, 0); 
-	for(int i = 0; i < len; i++){
-		if(str[i] == 'A'){
-			Ax[i] = 1;
-		}
-		else if(str[i] == 'B'){
-			Bx[len - (i+1)] = 1;
-		}
-	}
+    scanf("%s%s", sa, sb); // multiply two bin integers
+    printf("%s\n%s\n", sa, sb); // multiply two bin integers
+    int lena = strlen(sa), lenb = strlen(sb);
+	int n = 1;
+    while(n < lena + lenb) n *= 2; // reserving space for multiplication 
+    vec<int> a(n, 0), b(n, 0);
+    for(int i = 0; i < lena; i++)
+	    a[i] = sa[lena - 1 - i] - '0';
+    for(int i = 0; i < lenb; i++)
+	    b[i] = sb[lenb - 1 - i] - '0';
 
-	vec<int> res = multiply(Ax, Bx);
-
-	for(int i = len; i < n; i++){
-		cout << res[i] << "\n";
-	}
-
-	return 0;
+    vec<int> res = multiply(a, b);
+    for(int i = res[lena + lenb - 1] ? lena + lenb - 1: lena + lenb - 2; i >= 0; i--)
+	    putchar('0' + res[i]);
+    putchar('\n'); return 0;
 }
