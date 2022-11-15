@@ -206,7 +206,9 @@ vector<int> layer;
 ll curx;
 
 int cmpid = -1;
+
 using Lii = tuple<Line<ll>, int, int>;
+
 auto Linecmp = [](int a, int b){
 	double y1, y2;	
 	Line<ll>&L1 = lines[a], &L2 = lines[b];
@@ -224,8 +226,10 @@ auto Linecmp = [](int a, int b){
 	}
 	return ty[a] < ty[b];
 };
+
 set<int, decltype(Linecmp)> myS(Linecmp);
 using sIter = set<int, decltype(Linecmp)>::iterator;
+
 vector<sIter> where;
 sIter next(sIter it){
 	return ++it; 
@@ -238,6 +242,7 @@ bool check(const int a, const int b){
 		return false;
 	return (lines[a]).isSegIntersection(lines[b]);
 }
+
 void planesweeeep(){
 	int tid, pid;
 	Line<ll> cmpL;
