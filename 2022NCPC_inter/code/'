@@ -29,19 +29,19 @@ struct node {
     void pull(){
 		sz = 1;
 		ans = val ? false : true;
-//		cout << "\npulling " << val << endl;
-//		debug(ans);
+		cout << "\npulling " << val << endl;
+		debug(ans);
 		if(l){
-//			cout << "has leftans = " << l->ans << " lsz= " << l->sz <<endl;
+			cout << "has leftans = " << l->ans <<endl;
 			sz += l->sz;
 			ans = ans || l->ans;
 		}
 		if(r){
-//			cout << "has rightans= " << r->ans << " rsz= " << r->sz <<endl;
+			cout << "has rightans= " << r->ans <<endl;
 			sz += r->sz;
 			ans = ans || r->ans;
 		}
-//		cout << "result " << ans << endl;
+		cout << "result " << ans << endl;
     }
 };
 
@@ -117,7 +117,7 @@ int query(node* rt){
 		if(rt->l && rt->l->ans){
 			return query(rt->l);
 		}
-		else if(rt->val == 0){
+		else if(rt->ans){
 			return sz(rt->l) + 1;
 		}
 		else if(rt->r && rt->r->ans){
@@ -164,12 +164,12 @@ void inorder(node* rt){
 	inorder(rt->r);
 }
 void print(node*rt){
-	if(rt == nullptr) return;
+
 	if(rt->l){
 		cout << "go left\n";
 		print(rt->l);
 	}
-	cout << "(" << rt->val << ", " << rt->ans << "," << sz(rt) << ")\n";
+	cout << "(" << rt->val << ", " << rt->ans << ")\n";
 	if(rt->r){
 		cout << "go right\n";
 		print(rt->r);
@@ -188,33 +188,24 @@ int main() {
 		node* L, *M, *R, *todel;
 		node* nnode = new node(i);
 		split_by_size(mT, L, R, pos-1);
-
 		int fpos = query(R);
-		/*
-		cout << "R: \n" ;
-		print(R);
-		*/
-////////////////		
-//		debug(fpos + pos - 1);
-		if(fpos + pos - 1 > n){
+		if(fpos + pos > n){
 			split_by_size(R, R, todel, sz(R) - 1);
 			ans[todel->val] = n - initpos[todel->val] + 1;
-//			cout << "todel " << todel->val << endl;
+			cout << "todel " << todel->val << endl;
 			mT = merge(L, merge(nnode, R));
 		}
 		else{
 			split_by_size(R, M, R, fpos-1); 	
 			split_by_size(R, todel, R, 1);
-			mT = merge(L, merge(nnode, merge(M, R)));
+			mT = merge(L, merge(M, merge(nnode, R)));
 		}
-		/*
-		cout << "mT: \n";
 		print(mT);
-		cout << endl;*/
+		cout << endl;
 	}
 	inorder(mT);
 
 	for(int i = 1; i <= m; i++){
-		cout << ans[i] << (i == m ? "" : " ");
+		cout << ans[i] << (i == m ? "\n" : " ");
 	}
 }
