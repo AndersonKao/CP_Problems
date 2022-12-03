@@ -63,9 +63,7 @@ int query(int x){
 }
 
 void cdq(int l, int r){
-	//cout << "doing " << l << ", " << r << endl;
 	if(l == r){
-		//cout << "nothing.\n";
 		return ;
 	}
 	int mid = (l + r) >> 1;
@@ -83,7 +81,6 @@ void cdq(int l, int r){
 	
 	int lid = l, rid = mid + 1;
 	int zval;
-	//cout << "processing " << l << ", " << r << endl;
 	for(rid = mid+1; rid <= r; rid++){
 		while(lid <= mid && pts[lid].y > pts[rid].y){
 			zval = upper_bound(al(arr), pts[lid].z) - arr.begin() ;
@@ -92,7 +89,6 @@ void cdq(int l, int r){
 			lid++;
 		}
 		zval = upper_bound(al(arr), pts[rid].z) - arr.begin() ;
-		//cout << pts[rid].idx << " increas by " <<(query(arr.size()) - query(zval)) << endl;
 		ans[pts[rid].idx] += (query(arr.size()) - query(zval));
 		staticArr[cpidx++] = pts[rid];
 	}
@@ -100,15 +96,10 @@ void cdq(int l, int r){
 		staticArr[cpidx++] = pts[lid];
 		lid++;
 	}
-	//cout << "finish " << l << ", " << r << endl;
 
 	for(int i = 0; i < cpidx; i++){
 		pts[i + l] = staticArr[i];
 	}
-	/*
-	for(int i = l; i <= r; i++){
-	cout << pts[i] << (i == r ? "\n" : " ");
-	}*/
 }
 int main(){
 	yccc;		
@@ -117,8 +108,7 @@ int main(){
 	origin_pts.resize(n);
 	int idx = 0;
 	for (point& e: origin_pts) {
-		cin >> e.x >> e.y >> e.z;
-		e.idx = idx++;
+		cin >> e.x >> e.y >> e.z; e.idx = idx++;
 	}
 	pts = origin_pts;
 	auto cmp_1 = [](point&a , point &b){
