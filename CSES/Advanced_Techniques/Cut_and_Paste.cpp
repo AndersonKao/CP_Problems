@@ -81,6 +81,7 @@ node* build(char* str, int n){
 	node* p = new node(str[m]);
 	p->l = build(str, m);
 	p->r = build(str + m + 1, n - m - 1);
+	heapify(p);
 	pull(p);
 	return p;
 }
