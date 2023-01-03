@@ -19,9 +19,51 @@ using p = pair<T, T>;
 
 template<typename T>
 using vec = vector<T>;
+vec<vec<ll>> G;
+const ll mod = 1000000007;
+vec<vec<ll>> mul(const vec<vec<ll>>& A,const vec<vec<ll>> & B){
+	vec<vec<ll>> C(A.size(), vec<ll>(B[0].size(), 0));
+	if(A[0].size() != B.size())
+		return C;
+	for(int i = 0; i < C.size(); i++){
+		for(int j = 0; j < C[i].size(); j++){
+			for(int k = 0; k < A[0].size(); k++){
+				(C[i][j] += A[i][k] * B[k][j] % mod) %= mod;
+			}
+		}
+	}
 
+	return C;
+}
+vec<vec<ll>> binpow(vec<vec<ll>> &G, int k){
+	vec<vec<ll>> res = G;
+	vec<vec<ll>> ans(G.size(), vec<ll>(G.size(), 0));
+	for(int i = 0; i < ans.size(); i++){
+		ans[i][i] = 1;
+	}
+	while(k > 0){
+		if(k & 1){
+			ans = mul(ans, res);	
+		}
+		res = mul(res, res);
+		k >>= 1;
+	}
+	return ans;
+}
 int main(){
 	yccc;		
+	int n, m, k;
+	cin >> n >> m >> k;
+	G.resize(n, vec<ll>(n, 0));
+	REP(i, m){
+		int u, v;
+		cin >> u >> v;
+		u--, v--;
+		G[u][v]++;
+//	   	G[v][u]++;
+	}
+	vec<vec<ll>> F = binpow(G, k);
+	cout << F[0][n-1];
 	return 0;
 }
 
