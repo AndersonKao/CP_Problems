@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define REP(i, n) for(int i = 0; i < (int)n; i++)
-#define REP1(i, n) for(int i = 1; i <= (int)n; i++)
+#define REP0(i, n) for (int i = 0; i < n; i++)
+#define REP(i, a, b) for(int i = a; i <= b; i++)
 #define debug(x) cout << #x << ": " << x << endl;
 #define depii(x) cout << "(" << x.first << ", " << x.second << ")";
 #define devec(x) for(auto v: x) cout << v << endl;
