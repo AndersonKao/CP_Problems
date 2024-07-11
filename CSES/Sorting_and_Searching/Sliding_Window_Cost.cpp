@@ -51,6 +51,14 @@ void balance(){
 		lset.insert(*rmin);
 		rset.erase(rmin);	
 	}
+	while(lset.size() > (k+1)/2)
+	{
+		auto lmax= lset.find(*lset.rbegin());
+		lsum -= *lmax;
+		rsum += *lmax;
+		rset.insert(*lmax);
+		lset.erase(lmax);	
+	}
 }
 
 void remove(int val){
@@ -83,16 +91,28 @@ int main(){
 	yccc;		
 	cin >> n >> k;
 	vec<int> V(n);
-	for(size_t i = 0; i < k; i++){
+	for(size_t i = 0; i < n; i++){
 		cin >> V[i];
 	}
 	lsum = rsum = 0;
 	for(size_t i = 0; i < n; i++){
 		insert(V[i]);
-		if(i >= k){
+		if(i >= k-1){
 			balance();
+			/*
+			cout << "left: ";
+			for(int a: lset){
+				cout << a << " ";
+			}
+			cout << ", ";
+			cout << "right: ";
+			for(int a: rset){
+				cout << a << " ";
+			}
+			cout << endl;
+			*/
 			cout << getans() << (i == n-1 ? '\n' : ' ');
-			remove(V[i-k]);
+			remove(V[i-k+1]);
 		}
 	}
 
