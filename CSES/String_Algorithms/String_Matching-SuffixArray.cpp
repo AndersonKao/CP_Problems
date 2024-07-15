@@ -118,8 +118,6 @@ int main() {
 	}
 	*/
 
-	int T; cin >> T;
-	while(T--){
 		string qstr;
 		cin >> qstr;
 		int begin, end;
@@ -161,7 +159,6 @@ int main() {
 		//debug(begin);
 		//debug(end);
 		cout << end - begin << endl;
-	}
 	return 0;
 }
 
