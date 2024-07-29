@@ -23,55 +23,49 @@ inline int nu(char a){
 }
 
 ll fill(ll dp[][2][10], string& str){
-	for(int i = 18; i >= 0; i--){
-		if(i >= str.length()){
-			dp[i][1][0] = 1;
+	if(str.length() == 1 && str[0] == '0')
+		return 1;
+	// base case
+	// tight
+	dp[str.length()-1][1][nu(str[0])] = 1;
+	// loose
+	for(int d = 1; d < nu(str[0]); d++){
+		dp[str.length()-1][0][d] = 1;	
+	}
+	// inductive case
+	for(int i = str.length() - 2; i >= 0; i--){
+		int sid = str.length() - 1 - i;
+		int tightnum = nu(str[sid]);
+		int pretightnum = nu(str[sid-1]);
+		// tight
+		if(tightnum != pretightnum){
+			dp[i][1][tightnum] += dp[i+1][1][pretightnum];
 		}
-		else{
- 			int sid = str.length() - 1 - i;
-			int tightnum = nu(str[sid]);
-			if(i == str.length() - 1){
-				// tight
-				dp[i][1][tightnum] = 1;
-				// loose
-//				dp[i][0][0] = 0;
-				for(int d = 1; d < tightnum; d++){
-					dp[i][0][d] = 1;	
-				}
+		// loose
+		for(int d = 1; d <= 9; d++)
+			dp[i][0][d] += 1; // leading zero
+		for(int d = 0; d <= 9; d++){
+			for(int x = 0; x <= 9; x++){
+				if(x == d) continue;
+				dp[i][0][d] += dp[i+1][0][x];
 			}
-			else{
-				int pretightnum = nu(str[sid-1]);
-				// tight
-				if(tightnum != pretightnum){
-					dp[i][1][tightnum] += dp[i+1][1][pretightnum];
-				}
-				// loose
-				for(int d = 1; d <= 9; d++)
-					dp[i][0][d] += 1; // leading zero
-				for(int d = 0; d <= 9; d++){
-					for(int x = 0; x <= 9; x++){
-						if(x == d) continue;
-						dp[i][0][d] += dp[i+1][0][x];
-					}
-					if(d != pretightnum && d < tightnum){
-						dp[i][0][d] += dp[i+1][1][pretightnum];
-					}
-				}
+			if(d != pretightnum && d < tightnum){
+				dp[i][0][d] += dp[i+1][1][pretightnum];
 			}
 		}
 	}
-	ll ans = 0;
 
+	ll ans = 0;
 	for(int d = 0; d <= 9; d++){
 		ans += dp[0][0][d];
 		ans += dp[0][1][d];
 	}
 
-	return ans + (str.length() == 1 && str[0] == '0' ? 0 : 1); // 1 for 0
+	return ans + 1; // +1 for "0";
 }
 
 bool valid(string& number){
-	for(int i = 1; i < number.length(); i++){
+	for(size_t i = 1; i < number.length(); i++){
 		if(number[i] == number[i-1])
 			return false;
 	}
