@@ -17,42 +17,55 @@ template<typename T> using p = pair<T, T>;
 
 vec<list<pair<int, int>>::iterator> edges;
 
-const int maxn = (1 << 15);
+const int maxn = 100001;
 
 vector<int> G[maxn];
+int in[maxn], out[maxn];
 
 // create a graph, each node have bit string of (n-1)
 // De-brujin sequence corroespond to the Euler circuit (node id + next step)
+vector<int> path;
 
 void DFS(int u){
 	while(G[u].empty() == false){
 		int v = G[u].back();
 		G[u].pop_back();
-		cout << (v & 1);
 		DFS(v);
 	}
+	path.eb(u);
 }
 
 int main(){
 	yccc;		
-	int n;
-	cin >> n;
-	if(n == 1){
-		cout << "01" << endl;
+	int n, m;
+	cin >> n >> m;
+	for(int i = 0; i < m; i++){
+		int u, v;
+		cin >> u >> v;
+		G[u].eb(v);
+		out[u]++;
+		in[v]++;
+	}
+	for(int node = 2; node <= n-1; node++){
+		if(out[node] != in[node]){
+			cout << "IMPOSSIBLE\n";
+			return 0;
+		}
+	}
+	if(out[1] - in[1] > 1 || out[1] < in[1] || in[n] - out[n] > 1 || in[n] < out[n]){
+		cout << "IMPOSSIBLE\n";
+		return 0;
+	}	
+
+	DFS(1);
+	reverse(al(path));
+	if(path.back() != n || path.size() != m + 1){
+		cout << "IMPOSSIBLE\n";
 		return 0;
 	}
-
-	for(int u = 0; u < (1 << (n - 1)); u++){
-		int v1 = ((u & ((1 << (n-2)) - 1)) << 1);
-		int v2 = v1 | 1;
-		G[u].eb(v1);
-		G[u].eb(v2);
+	for(int node: path){
+		cout << node << " ";
 	}
-	for(int i = 1; i <= n-1; i++){
-		cout << 0;
-	}
-
-	DFS(0);
 
 	return 0;
 }
