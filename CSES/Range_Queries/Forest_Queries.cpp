@@ -1,4 +1,4 @@
-// O(nq) 
+// O(n^2 + q) 
 #pragma GCC optimize("Ofast")
 #include <bits/stdc++.h>
 using namespace std;
@@ -25,7 +25,7 @@ int main() {
 	char ch;
 	for(int i = 1; i <= n; i++){
 		for(int j = 1; j <= n; j++){
-			pre[i][j] = pre[i][j-1];
+			pre[i][j] = pre[i][j-1] + pre[i-1][j] - pre[i-1][j-1];
 			cin >> ch;
 			if(ch == '*'){
 				pre[i][j] += 1;
@@ -35,11 +35,7 @@ int main() {
 	while(q--){
 		int x1, x2, y1, y2;
 		cin >> y1 >> x1 >> y2 >> x2;
-		ll ans = 0;
-		for(int y = y1; y <= y2; y++){
-			ans += pre[y][x2] - pre[y][x1-1];	
-		}
-		cout << ans << endl;
+		cout << pre[y2][x2] - pre[y1-1][x2] - pre[y2][x1-1] + pre[y1-1][x1-1]<< endl;
 	}
 	return 0;
 }
