@@ -1,3 +1,4 @@
+// persistent segment tree
 #include <bits/stdc++.h>
 using namespace std;
 /*
@@ -33,17 +34,10 @@ ll arr[maxn];
 
 struct node{
 	int L, R;
-	ll sum;
-	int tid;
 	node* lc, *rc;
-	vec<node*> ptme;// point to me
-	node(){
+	ll sum;
+	node(int L, int R, node*lc = nullptr, node *rc = nullptr, ll sum = 0):L(L), R(R), lc(lc), rc(rc), sum(sum){
 
-	}
-	node(int L, int R, int tid = 0): L(L), R(R){
-		sum = 0;
-		this->tid = tid;
-		lc = rc = nullptr;	
 	}
 };
 
@@ -72,25 +66,6 @@ void dfs(node* cur){
 	dfs(cur->rc);
 }
 
-void solveptme(cur* node){
-	for(node* u: node->ptme){
-		node **v;
-		if(u->lc == node){
-			v = &u->lc;
-		}	
-		else{
-			v = &u->rc;
-		}
-		*v = new node(node->L, node->R, u->tid);
-		(*v)->sum = node->sum;
-		(*v)->lc = node->lc;
-		(*v)->rc = node->rc;
-		node->lc->ptme.eb(*v);
-		node->rc->ptme.eb(*v);
-	}
-	node->ptme.clear();
-}
-
 void modify(node* cur, int a, ll x){
 	if(cur->L == cur->R && cur->L == a){
 		cur->sum = x;
@@ -99,19 +74,13 @@ void modify(node* cur, int a, ll x){
 
 	int M = (cur->L + cur->R) >> 1;
 	if(a <= M){
-		if(cur->lc->tid != cur->tid){
-			node* lchild = new node(cur->lc->L, cur->lc->R, cur->tid);
-			lchild->lc = cur->lc->lc; lchild->rc = cur->lc->rc;
-			cur->lc = lchild;
-		}
+		node* lchild = new node(cur->lc->L, cur->lc->R, cur->lc->lc, cur->lc->rc);
+		cur->lc = lchild;
 		modify(cur->lc, a, x);
 	}
 	else{
-		if(cur->rc->tid != cur->tid){
-			node* rchild = new node(cur->rc->L, cur->rc->R, cur->tid);
-			rchild->lc = cur->rc->lc; rchild->rc = cur->rc->rc;
-			cur->rc = rchild;
-		}
+		node* rchild = new node(cur->rc->L, cur->rc->R, cur->rc->lc, cur->rc->rc);
+		cur->rc = rchild;
 		modify(cur->rc, a, x);
 	}
 	cur->sum = cur->lc->sum + cur->rc->sum;
@@ -154,10 +123,7 @@ int main(){
 			cout << query(trees[k], a, b) << endl;
 		}
 		if(op == 3){
-			node* nnode = new node(0, n-1, trees.size());
-			nnode->lc = trees[k]->lc;
-			nnode->rc = trees[k]->rc;
-			nnode->sum = trees[k]->sum;
+			node* nnode = new node(0, n-1, trees[k]->lc, trees[k]->rc, trees[k]->sum);
 			trees.eb(nnode);
 		}
 	}
