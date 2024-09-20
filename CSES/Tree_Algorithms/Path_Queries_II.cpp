@@ -47,9 +47,9 @@ int dfs(int u, int pa = 0, int d = 0){
 		int c_size = dfs(v, u, d+1);
 		if(c_size > max_c_size){
 			max_c_size = c_size;
-			heavy[u] = v;	
-			size += c_size;
+			heavy[u] = v;
 		}
+		size += c_size;
 	}
 	L[u] = tstamp++;
 	return size;
@@ -83,10 +83,9 @@ void segment_tree_build(int L, int R, int idx = 1){
 	seg[idx] = max(seg[idx * 2], seg[idx * 2 + 1]);
 }
 
-
 int segment_tree_query(int l, int r, int L, int R, int idx = 1)
 {
-	if(L <= l && r <= R){
+	if(l <= L && R <= r){
 		return seg[idx];
 	}
 	if(R < l || r < L){
@@ -116,22 +115,30 @@ int query(int a, int b, int n){ // query the path from a to b (or b to a)
 	int res = 0;
 	for(; head[a] != head[b]; b = parent[head[b]]){
 		if(depth[head[a]] > depth[head[b]]) swap(a, b);
+		/*
 		debug(a);
 		debug(head[a]);
 		debug(b);
-		debug(head[b]);
+		debug(head[b]);*/
 		int cur_heavy_path_max = segment_tree_query(pos[head[b]], pos[b], 1, n);
 		res = max(res, cur_heavy_path_max);
 	}
 	if(depth[a] > depth[b]){
 		swap(a, b);
 	}
+	//cout << "query pos between " << pos[a] << " and " << pos[b] << endl;
 	int last_heavy_path_max = segment_tree_query(pos[a], pos[b], 1, n);
 	res = max(res, last_heavy_path_max);
 	return res;
 }
 
 int LCA(int a, int b){
+	if(isAncestor(a, b)){
+		return a;
+	}
+	if(isAncestor(b, a)){
+		return b;
+	}
 	for(int i = 20-1; i >= 0; i--){
 		if(par[i][b] != 0 && isAncestor(par[i][b], a) == false){
 			b = par[i][b];
@@ -141,7 +148,7 @@ int LCA(int a, int b){
 }
 
 int main(){
-//	yccc;		
+	yccc;		
 	int n, q;
 	cin >> n >> q;
 
@@ -178,12 +185,20 @@ int main(){
 		cout << u << ": " << D[u] << ", " << L[u] << endl;
 		cout << parent[u];
 		for(int i = 1; i < 3; i++){
-			cout << " " << pa[u][i] << " ";
+			cout << " " << par[i][u] << " ";
 		}
 		cout << endl;
 	}
-	(*/
+	for(int u = 1; u <= n; u++){
+		cout << "head[" << u << "]: " << head[u] << endl;
+	}
 
+	for(int u = 1; u <= n; u++){
+		cout << "pos of " << u << ": " << pos[u] << endl;
+	}
+	for(int i = 1; i <= n; i++){
+		cout << "seq[" << i << "]: " << seq[i] << endl;
+	}*/
 	while(q--){
 		int op;
 		cin >> op;
@@ -195,8 +210,13 @@ int main(){
 		else{
 			int a, b;
 			cin >> a >> b;
+//			cout << "a: " << a << ", b: " << b << endl;
 			int v = LCA(a, b);
-			debug(v);
+			if(v == a || v == b){
+				cout << query(a, b, n) << " ";
+				continue;
+			}
+//			debug(v);
 			cout << max(query(v, a, n), query(v, b, n)) << " ";
 		}
 	}
