@@ -1,7 +1,5 @@
 #include <bits/stdc++.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
+ 
 using namespace std;
 /*
 #include <ext/pb_ds/assoc_container.hpp>
@@ -27,20 +25,20 @@ using pii = pair<int, int>;
 using pll = pair<ll, ll>;
 template<typename T>
 using p = pair<T, T>;
-
+ 
 template<typename T>
 using vec = vector<T>;
 const int maxn = 200000;
 bool been_centroid[maxn+5];
 int depth[maxn+5], sz[maxn+5];
-vector<list<int>> G;
+vector<vector<int>> G;
 int cnt[maxn + 5];
 ll ans = 0;
-int n, k;
-
+int n, k1, k2;
+ 
 void print_tree(int u, int pa = -1){
 	cout << u << " ";
-
+ 
 	for(int v: G[u]){
 		if(v == pa) continue;
 		if(been_centroid[v]){
@@ -49,98 +47,92 @@ void print_tree(int u, int pa = -1){
 		print_tree(v, u);
 	}
 }
-int gloc;
-
-void tree_centroid(int u, int pa, int tree_size, int d =1)
+ 
+int tree_centroid(int u, int pa, int tree_size, int d =1)
 {
-//	debug(d);
-//	debug(u);
 	sz[u] = 1;
     int maxsub = 0; // max subtree size of u
-
 	for(int v: G[u]){
 		if(been_centroid[v]) continue;
         if (v==pa){
 			continue;
 		}
-         tree_centroid(v, u, tree_size, d+1);
+        int c = tree_centroid(v, u, tree_size, d+1);
+		if(c != -1){
+			return c;
+		}
         maxsub = max(maxsub, sz[v]);
         sz[u] += sz[v];
     }
     maxsub = max(maxsub, tree_size-sz[u]);
-
+ 
     if (maxsub <= tree_size/2)
     {
-		gloc = u;
-	//	return u;
+		return u;
     }
-//    return -1;
+	return -1;
 }
-
-void dfs_count(int u, int pa, int d = 1){
-	if(k > d){
-		ans += cnt[k - d];
+ 
+void dfs_count(int u, int pa, int partial_sum, int d = 1){
+	ans += partial_sum;	
+	if(k1-d-1 >= 0){
+		partial_sum += cnt[k1-d-1];
 	}
-	else{
-		return;
+	if(k2-d >= 0){
+		partial_sum -= cnt[k2-d];
 	}
-
-
 	for(auto it = G[u].begin(); it != G[u].end(); it++){
 		if(been_centroid[*it]) continue;
-
+ 
 		int v = *it;
 		if(v == pa) continue;
-
-		dfs_count(v, u, d+1);
+		
+		dfs_count(v, u, partial_sum, d+1);
 	}
 }
-
-void dfs_update(int u, int pa, int d = 1){
+ 
+void dfs_update(int u, int pa, int &initial_sum, int &maxd, int d = 1){ // return max depth
 	cnt[d]++;
+	if(d >= k1-1 && d <= k2-1){
+		initial_sum += 1;
+	}
 	sz[u] = 1;
+	maxd = max(maxd, d);
 	for(int v: G[u]){
 		if(v == pa) continue;
 		if(been_centroid[v]){
 			continue;
 		}	
-		dfs_update(v, u, d+1);
+		dfs_update(v, u, initial_sum, maxd, d+1);
 		sz[u] += sz[v];
 	}
 }
-
+ 
 void solve(int subtree_u, int subtree_sz){ // subtree: maximum subtree containing u and all nodes haven't been centroid before.
-	if(subtree_sz == 1 || subtree_sz < k) return;
-
-//	debug(subtree_u);
-//	debug(subtree_sz);
-	tree_centroid(subtree_u, -1, subtree_sz);
-	int centroid = gloc;
+	if(subtree_sz == 1 || subtree_sz < k1) return;
+ 
+	int centroid = tree_centroid(subtree_u, -1, subtree_sz);
 	been_centroid[centroid] = true;
-
-	memset(cnt, 0, sizeof(int) * (k + 1));
-
+ 
+	int initial_sum = 0;
+	int maxd = 0;
 	for(int child: G[centroid]){
 		if(been_centroid[child]) continue;
-		dfs_count(child, -1);
-		dfs_update(child, -1);
+		dfs_count(child, -1, initial_sum);
+		dfs_update(child, -1, initial_sum, maxd);
 	}
-
-	ans += cnt[k];
-
+ 
+	ans += (initial_sum - cnt[k1-1] + cnt[k2]); 
+	memset(cnt, 0, sizeof(int) * (maxd + 1));
 	for(int child: G[centroid]){
 		if(been_centroid[child]) continue;
 		solve(child, sz[child]);
 	}
 }
-
+ 
 int main(){
-	struct rlimit rl;
-	getrlimit(RLIMIT_STACK, &rl);
-	rl.rlim_cur *= 10;
-	setrlimit(RLIMIT_STACK, &rl);
 	yccc;
-	cin >> n >> k;
+	cin >> n >> k1 >> k2;
 	G.resize(n);
 	for(int i = 0; i < n-1; i++){
 		int a, b;
@@ -153,3 +145,4 @@ int main(){
 	cout << ans << endl;
 	return 0;
 }
+
